@@ -1,0 +1,15 @@
+{
+  "format": 1,
+  "decks": [
+    {
+      "id": "learning-how-to-learn",
+      "title": "Learning How to Learn",
+      "subtitle": "The starter deck: learn the method by using it",
+      "kind": "article",
+      "source": "Interactive Learning: Principles",
+      "path": "learning-how-to-learn/deck.json",
+      "concepts": 10,
+      "questions": 51
+    }
+  ]
+}

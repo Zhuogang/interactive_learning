@@ -1,0 +1,803 @@
+{
+  "$schema": "../../schema/deck.schema.json",
+  "format": 1,
+  "id": "learning-how-to-learn",
+  "title": "Learning How to Learn",
+  "subtitle": "The starter deck: learn the method by using it",
+  "source": {
+    "kind": "article",
+    "title": "Interactive Learning: Principles",
+    "authors": ["interactive_learning contributors"],
+    "year": 2026,
+    "url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md",
+    "notes": "Summarizes research by Roediger & Karpicke, Bjork, Dunlosky et al., Fogg, Guise and others. Full references are in the Sources section."
+  },
+  "goal": "Explain why this toolkit works the way it does, and design your own study habits with it.",
+  "audience": "Anyone who studies: no background needed.",
+  "habit": { "suggested_anchor": "pour my morning coffee" },
+  "concepts": [
+    {
+      "id": "retrieval",
+      "title": "Retrieval practice",
+      "summary": "Pulling an idea **out** of your memory (answering a question, writing what you remember) strengthens it far more than putting it **in** again by rereading.\n\nEvery successful retrieval makes the next one easier. It also shows you, honestly, what you don't know yet.",
+      "analogy": "Memory works more like a path through a forest than a filing cabinet: each time you walk it, it gets clearer. Rereading is like looking at a map of the path instead of walking it.",
+      "example": "After reading a chapter, close the book and write the three main ideas from memory, then check, instead of reading it a second time.",
+      "read": "PRINCIPLES.md §1 Retrieval practice",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#1-retrieval-practice",
+      "jargon": ["retrieval practice", "testing effect", "encoding"]
+    },
+    {
+      "id": "spacing",
+      "title": "Spacing",
+      "summary": "Study spread over several days beats the same total time crammed into one sitting.\n\nComing back after you've started to forget makes recall harder, and that effort makes the memory last longer. Each time you succeed, the next gap can grow.",
+      "analogy": "Like watering a plant a little every few days instead of flooding it once a month.",
+      "example": "Ten minutes on six different days instead of an hour on Sunday night. A card you get right comes back in 3 days, then a week, then two weeks…",
+      "read": "PRINCIPLES.md §2 Spacing",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#2-spacing",
+      "prereqs": ["retrieval"],
+      "jargon": ["spacing effect", "distributed practice", "forgetting curve", "Leitner system"]
+    },
+    {
+      "id": "tiny-habits",
+      "title": "Tiny Habits",
+      "summary": "BJ Fogg: a behavior happens when **M**otivation, **A**bility and a **P**rompt come together at the same moment (B = MAP).\n\nMotivation goes up and down, so design around it: make the behavior tiny, attach it to something you already do every day (an *anchor*), and celebrate right after. According to Fogg, the good feeling is what wires in the habit.",
+      "analogy": "Plant a seed, not a tree. A tiny habit in the right spot grows by itself.",
+      "example": "After I pour my morning coffee, I will answer one card. Then I'll say \"Nice!\"",
+      "read": "PRINCIPLES.md §3 Tiny Habits",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#3-tiny-habits",
+      "jargon": ["B = MAP", "anchor", "prompt", "Shine"]
+    },
+    {
+      "id": "mini-habits",
+      "title": "Mini Habits",
+      "summary": "Stephen Guise: pick a daily minimum so small it's \"stupid small\" (one push-up, one page, one card) and never miss it.\n\nAnything more is a **bonus rep**: welcome, never required. With the bar that low there's no excuse to skip, and because starting is the hardest part, one often turns into many.",
+      "analogy": "Getting a heavy cart rolling: the first push takes the most effort. After that it mostly keeps going.",
+      "example": "Your minimum is one card. Some days you answer one and stop, which counts as a full success. Some days one turns into twenty.",
+      "read": "PRINCIPLES.md §4 Mini Habits",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#4-mini-habits",
+      "prereqs": ["tiny-habits"],
+      "jargon": ["mini habit", "bonus reps", "willpower"]
+    },
+    {
+      "id": "pretesting",
+      "title": "Pretesting",
+      "summary": "Trying to answer a question *before* you've learned the material helps you learn the answer better when you meet it, even if your guess is wrong.\n\nThe guess switches on what you already know and makes you curious, so you notice the answer when it comes. That's why every new concept here starts with a guess.",
+      "example": "Before reading a paper's method section, guess: \"How would I solve this problem?\" Then read and compare.",
+      "read": "PRINCIPLES.md §5 Pretesting",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#5-pretesting",
+      "prereqs": ["retrieval"],
+      "jargon": ["pretesting effect", "generation effect"]
+    },
+    {
+      "id": "elaboration",
+      "title": "Elaboration",
+      "summary": "Ask \"*Why* is this true?\" and \"*How* does this work?\", then answer in your own words.\n\nExplaining links the new idea to what you already know. Linked ideas are easier to understand and have more routes back to them when you need them.",
+      "example": "Instead of memorizing \"spacing improves memory\", ask \"why would a gap help?\" and answer it.",
+      "read": "PRINCIPLES.md §6 Elaboration",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#6-elaboration",
+      "jargon": ["elaborative interrogation", "self-explanation"]
+    },
+    {
+      "id": "interleaving",
+      "title": "Interleaving",
+      "summary": "Practice different kinds of problems or ideas **mixed together** rather than in blocks of one kind.\n\nMixing feels harder, but it trains what real problems demand: recognizing *which* idea applies, and telling similar ideas apart.",
+      "example": "Instead of ten questions on A, then ten on B, alternate A, C, B, A, B, C…",
+      "read": "PRINCIPLES.md §7 Interleaving",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#7-interleaving",
+      "prereqs": ["spacing"],
+      "jargon": ["interleaving", "blocked practice", "discrimination"]
+    },
+    {
+      "id": "calibration",
+      "title": "Calibration",
+      "summary": "We're poor judges of what we know. Familiar material *feels* known: an illusion of competence.\n\nThe fix is to commit to an answer and a confidence rating **before** you see the answer, then compare. Errors you were sure about turn out to be the ones you correct best.",
+      "example": "Before revealing, tap *I know it*, *I think so* or *Guessing*. The app then shows how often you're right at each level.",
+      "read": "PRINCIPLES.md §8 Calibration",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#8-calibration",
+      "prereqs": ["retrieval"],
+      "jargon": ["metacognition", "calibration", "illusion of competence", "hypercorrection"]
+    },
+    {
+      "id": "desirable-difficulties",
+      "title": "Desirable difficulties",
+      "summary": "Some difficulties slow down how fast you *seem* to improve but make learning last: retrieving instead of rereading, spacing, mixing, guessing first. Robert Bjork calls them *desirable difficulties*.\n\nThey feel worse, so people pick the easy option. How well practice is going right now (**performance**) is not the same as what lasts (**learning**). A difficulty is only desirable if you can meet it with effort.",
+      "example": "A quiz session where you get 60% right can build more lasting memory than a reread where everything feels obvious.",
+      "read": "PRINCIPLES.md §9 Desirable difficulties",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#9-desirable-difficulties",
+      "prereqs": ["retrieval", "spacing", "pretesting", "interleaving"],
+      "jargon": ["desirable difficulty", "performance", "learning", "fluency"]
+    },
+    {
+      "id": "feynman",
+      "title": "The Feynman technique",
+      "summary": "Explain an idea in plain words, without notes, as if to a curious 12-year-old. Wherever you get stuck, hand-wave, or reach for jargon, you've found a gap.\n\nGo back to the source, fill the gap, and explain again, more simply. (It's a popular distillation of how Richard Feynman worked, not a method he wrote down.)",
+      "analogy": "Like a flashlight: explaining shines a light into the corners of your understanding, and the dark spots are where to dig.",
+      "example": "Write 100 words on why spacing works without looking. If you can't say *why* a gap helps, reread §2, then rewrite.",
+      "read": "PRINCIPLES.md §10 The Feynman technique",
+      "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#10-the-feynman-technique",
+      "prereqs": ["elaboration", "calibration"],
+      "jargon": ["Feynman technique", "illusion of explanatory depth", "jargon"]
+    }
+  ],
+  "questions": [
+    {
+      "id": "retrieval-pretest",
+      "concept": "retrieval",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "You have one hour to prepare for a test next week on a textbook chapter. Which plan will most likely give you the best score **a week from now**?",
+      "options": [
+        { "text": "Read the chapter four times.", "why": "Rereading feels productive. In the classic study, rereaders did best five minutes later but worst a week later." },
+        { "text": "Read it once, then spend the rest of the hour recalling it from memory and checking.", "correct": true, "why": "This is retrieval practice: pulling the material out strengthens it." },
+        { "text": "Read it once while highlighting, then reread the highlights.", "why": "Highlighting was rated a low-utility technique; rereading highlights is still re-exposure, not retrieval." },
+        { "text": "Read it once, then copy out the key sentences word for word.", "why": "Copying moves text from the page to the page. Nothing has to come out of your memory." }
+      ],
+      "explanation": "Roediger & Karpicke (2006): one reading plus three recall tests beat four readings on a test a week later (about 61% vs. 40%).",
+      "ref": "PRINCIPLES.md §1"
+    },
+    {
+      "id": "retrieval-recall",
+      "concept": "retrieval",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "In Roediger & Karpicke's (2006) study, the \"read it four times\" group beat the \"read once, test three times\" group on one test, but lost badly on another. What was the difference between the two tests?",
+      "answer": "Timing. The rereaders did better on a test five minutes later; the tested group remembered much more a week later.",
+      "key_points": ["Rereading won on the immediate (5-minute) test", "Testing won on the delayed (1-week) test"],
+      "explanation": "Good short-term performance can hide poor long-term learning, which is why rereading fools people.",
+      "ref": "PRINCIPLES.md §1"
+    },
+    {
+      "id": "retrieval-why",
+      "concept": "retrieval",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why does rereading *feel* more effective than quizzing yourself, even though it usually isn't?",
+      "answer": "Rereading makes the material feel familiar and fluent, and we mistake that feeling for knowing it. Quizzing is effortful and exposes mistakes, so it feels worse, yet that effort is what strengthens memory.",
+      "key_points": ["Familiarity / fluency feels like knowing", "Quizzing is effortful and exposes gaps", "The effort of retrieval is what strengthens memory"],
+      "ref": "PRINCIPLES.md §1"
+    },
+    {
+      "id": "retrieval-apply",
+      "concept": "retrieval",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "You just watched a 20-minute lecture. Which 5-minute follow-up is retrieval practice?",
+      "options": [
+        { "text": "Rewatch the most important 5 minutes at 1.5× speed.", "why": "Re-exposure: the information comes in again, but nothing has to come out." },
+        { "text": "Close the video, write down everything you remember, then check what you missed.", "correct": true, "why": "You pull it from memory first, then check. That's retrieval plus feedback." },
+        { "text": "Read the auto-generated summary of the transcript.", "why": "Reading someone else's summary is input, not output." },
+        { "text": "Tidy up your notes and copy the slides into them.", "why": "Organizing feels useful but doesn't require recalling anything." }
+      ],
+      "ref": "PRINCIPLES.md §1"
+    },
+    {
+      "id": "retrieval-review",
+      "concept": "retrieval",
+      "type": "mcq",
+      "purpose": "recall",
+      "prompt": "Dunlosky et al. (2013) reviewed ten popular study techniques. Which two did they rate \"high utility\"?",
+      "options": [
+        { "text": "Practice testing and distributed (spaced) practice", "correct": true, "why": "These two were the only high-utility ratings." },
+        { "text": "Highlighting and rereading", "why": "Both were rated low utility, despite being students' favorites." },
+        { "text": "Summarization and the keyword mnemonic", "why": "Both were rated low utility." },
+        { "text": "Self-explanation and elaborative interrogation", "why": "These were rated moderate utility: useful, but with less evidence." }
+      ],
+      "ref": "PRINCIPLES.md §1, §6"
+    },
+    {
+      "id": "retrieval-teach",
+      "concept": "retrieval",
+      "type": "feynman",
+      "purpose": "teach",
+      "prompt": "Explain to a curious 12-year-old why quizzing yourself beats rereading your notes.",
+      "audience": "a curious 12-year-old",
+      "word_limit": 100,
+      "rubric": [
+        "Says that pulling information out of memory makes it stronger",
+        "Contrasts it with rereading, which feels familiar but builds less",
+        "Mentions that quizzing also shows what you don't know yet",
+        "Uses an everyday example or analogy",
+        "No unexplained jargon"
+      ],
+      "follow_ups": [
+        "But if I read it again, it's in my brain again. Why isn't that enough?",
+        "What if I get the quiz question wrong? Did I waste my time?"
+      ],
+      "ref": "PRINCIPLES.md §1"
+    },
+    {
+      "id": "spacing-pretest",
+      "concept": "spacing",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Ana and Ben each study the same vocabulary for 3 hours total. Ana does one 3-hour block the night before the test; Ben does six 30-minute sessions over two weeks. They score about the same the next morning. Who remembers more **a month later**?",
+      "options": [
+        { "text": "Ana: her study was fresher.", "why": "Cramming can work for tomorrow morning, but it fades quickly after that." },
+        { "text": "Ben", "correct": true, "why": "Same total time, spread out: that's the spacing effect." },
+        { "text": "The same: total study time is what matters.", "why": "One of the most replicated findings in memory research is that how time is distributed matters, not just how much." },
+        { "text": "Impossible to predict.", "why": "The spacing effect is robust across ages and materials." }
+      ],
+      "explanation": "The spacing effect goes back to Ebbinghaus (1885); a meta-analysis of 300+ experiments confirms it (Cepeda et al., 2006).",
+      "ref": "PRINCIPLES.md §2"
+    },
+    {
+      "id": "spacing-recall",
+      "concept": "spacing",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "In this toolkit's Leitner system, what happens to a card when you get it right, and what happens when you miss it?",
+      "answer": "Right: it moves up one box, so the next review is further away (1 day → 3 days → 1 week → 2 weeks → 1 month → 2 months). Missed: it drops back to box 1 and comes back tomorrow.",
+      "key_points": ["Right → up a box, longer gap before the next review", "Missed → back to box 1 (tomorrow)"],
+      "ref": "PRINCIPLES.md §2"
+    },
+    {
+      "id": "spacing-why",
+      "concept": "spacing",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why would *partly* forgetting something before you review it help you remember it longer?",
+      "answer": "Recalling a memory that has started to fade takes more effort, and effortful recall strengthens the memory more than recalling something that's still fresh.",
+      "key_points": ["After a gap, recall is harder", "Harder (effortful) recall builds a stronger, longer-lasting memory"],
+      "ref": "PRINCIPLES.md §2, §9"
+    },
+    {
+      "id": "spacing-apply",
+      "concept": "spacing",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "You want to remember a paper's key ideas for a talk in three months. Which review plan fits spacing best?",
+      "options": [
+        { "text": "Review it every day this week, then stop.", "why": "All the effort is up front, with nothing to carry it for three months." },
+        { "text": "Read it three times in a row today so it sinks in.", "why": "Massed practice: it feels thorough but fades." },
+        { "text": "Review it tomorrow, in 3 days, a week later, two weeks later, then monthly.", "correct": true, "why": "Expanding gaps: each successful review earns a longer one." },
+        { "text": "Review it once, the night before the talk.", "why": "That's cramming: fine for tomorrow, fragile after." }
+      ],
+      "ref": "PRINCIPLES.md §2"
+    },
+    {
+      "id": "spacing-vs-retrieval",
+      "concept": "spacing",
+      "type": "mcq",
+      "purpose": "compare",
+      "also": ["retrieval"],
+      "prompt": "Retrieval practice and spacing are usually combined. What's the best way to tell them apart?",
+      "options": [
+        { "text": "They are two names for the same effect.", "why": "You can retrieve without spacing (quiz yourself five times in a row) and space without retrieving (reread once a week)." },
+        { "text": "Retrieval is about *how* you study (pull it from memory); spacing is about *when* (spread over time).", "correct": true, "why": "How vs. when. They stack well together." },
+        { "text": "Spacing only works for vocabulary; retrieval works for ideas.", "why": "Both have been shown with many kinds of material." },
+        { "text": "Retrieval helps short-term memory; spacing helps long-term memory.", "why": "Both help long-term retention most." }
+      ],
+      "ref": "PRINCIPLES.md §1, §2"
+    },
+    {
+      "id": "spacing-teach",
+      "concept": "spacing",
+      "type": "feynman",
+      "purpose": "teach",
+      "prompt": "Explain to a 12-year-old why studying 10 minutes a day for six days beats one hour the night before a test.",
+      "audience": "a 12-year-old",
+      "word_limit": 100,
+      "rubric": [
+        "Says spreading study out helps you remember for longer",
+        "Explains that coming back after forgetting a little makes recall harder, and that effort makes it stick",
+        "Says cramming can work for tomorrow but fades quickly",
+        "Uses an example or analogy",
+        "No unexplained jargon"
+      ],
+      "follow_ups": [
+        "But if I forget things in between, isn't that bad?",
+        "How long should I wait between sessions?"
+      ],
+      "ref": "PRINCIPLES.md §2"
+    },
+    {
+      "id": "tiny-habits-pretest",
+      "concept": "tiny-habits",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Someone keeps failing at \"study for one hour every evening\". Which change is most likely to make a study habit stick?",
+      "options": [
+        { "text": "Find a more inspiring reason to study.", "why": "Motivation is unreliable: it surges and fades. A habit that needs it will break on low days." },
+        { "text": "Go for two hours to make up for the missed days.", "why": "Raising the bar makes it harder to start, which means more misses and more guilt." },
+        { "text": "Wait for a less busy month to start properly.", "why": "The less busy month rarely comes. Waiting is designing for motivation again." },
+        { "text": "Shrink it to one flashcard, right after brushing their teeth.", "correct": true, "why": "Tiny (easy to do) and anchored to an existing routine (a reliable prompt)." }
+      ],
+      "explanation": "Fogg: when a behavior isn't happening, make it easier and give it a better prompt before reaching for more motivation.",
+      "ref": "PRINCIPLES.md §3"
+    },
+    {
+      "id": "tiny-habits-recall",
+      "concept": "tiny-habits",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "What does **B = MAP** stand for, and what does it claim?",
+      "answer": "Behavior = Motivation + Ability + Prompt: a behavior happens when all three come together at the same moment. If one is missing, the behavior doesn't happen.",
+      "key_points": ["Motivation, Ability, Prompt", "All three must be present at the same moment"],
+      "ref": "PRINCIPLES.md §3"
+    },
+    {
+      "id": "tiny-habits-why",
+      "concept": "tiny-habits",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Fogg says to celebrate *immediately* after doing the tiny behavior. Why immediately, and why does celebrating matter at all?",
+      "answer": "According to Fogg, emotions create habits: the good feeling of success (\"Shine\") is what wires the behavior in. It has to come right after the behavior so your brain connects the two.",
+      "key_points": ["The good feeling helps wire in / reinforce the habit", "It must come right after, so the brain links it to the behavior"],
+      "ref": "PRINCIPLES.md §3"
+    },
+    {
+      "id": "tiny-habits-apply",
+      "concept": "tiny-habits",
+      "type": "short",
+      "purpose": "apply",
+      "prompt": "Write a Tiny Habits recipe for studying this deck: \"After I ___, I will ___.\" Then check it: is your anchor something you already do every day, at a predictable moment?",
+      "answer": "For example: \"After I sit down on the morning train, I will open the app and answer one card.\" A good anchor is a solid existing routine (pouring coffee, sitting on the train, brushing teeth) and the behavior is tiny.",
+      "key_points": ["The anchor is an existing, reliable daily routine", "The behavior is tiny (about one card)", "The behavior comes right after the anchor"],
+      "ref": "PRINCIPLES.md §3"
+    },
+    {
+      "id": "mini-habits-pretest",
+      "concept": "mini-habits",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Your daily minimum is one flashcard, and most days you end up doing about fifteen. Should you raise the minimum to fifteen?",
+      "options": [
+        { "text": "Yes: the minimum should match what you actually do.", "why": "Raising it brings back the resistance the tiny minimum removed. On a bad day, fifteen feels like a chore and gets skipped." },
+        { "text": "No: keep the minimum at one and enjoy the extra as bonus reps.", "correct": true, "why": "Guise: never raise the requirement; put the extra energy into bonus reps." },
+        { "text": "Yes, but only by one card per week.", "why": "Gentler, but it still turns bonus reps into requirements, and the bar keeps climbing." },
+        { "text": "No: lower it to zero on busy days instead.", "why": "A zero day is a skipped day. One card is designed to fit even the busiest day." }
+      ],
+      "ref": "PRINCIPLES.md §4"
+    },
+    {
+      "id": "mini-habits-recall",
+      "concept": "mini-habits",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "What is a \"bonus rep\" in Mini Habits, and why does the distinction matter?",
+      "answer": "Anything you do beyond the daily minimum. It's welcome but never required, so the day counts as a full success once the minimum is done. You never \"fail\" by stopping after the minimum.",
+      "key_points": ["Work beyond the minimum", "Optional, never required", "The day is a success as soon as the minimum is met"],
+      "ref": "PRINCIPLES.md §4"
+    },
+    {
+      "id": "mini-habits-why",
+      "concept": "mini-habits",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "How can a minimum of \"one card\" lead to *more* studying than a goal of \"thirty minutes\"?",
+      "answer": "A tiny minimum removes the resistance to starting (no excuse is good enough to skip one card), and once you've started you often keep going. A big goal is easy to postpone on hard days, and missed days bring guilt that makes restarting harder.",
+      "key_points": ["No resistance or excuse to start", "Starting often leads to doing more", "Big goals get skipped on hard days, and guilt follows"],
+      "ref": "PRINCIPLES.md §4"
+    },
+    {
+      "id": "mini-vs-tiny",
+      "concept": "mini-habits",
+      "type": "mcq",
+      "purpose": "compare",
+      "also": ["tiny-habits"],
+      "prompt": "Tiny Habits (Fogg) and Mini Habits (Guise) agree the behavior should be tiny. What does each one add?",
+      "options": [
+        { "text": "Fogg: rely on willpower. Guise: rely on motivation.", "why": "Fogg explicitly designs *around* unreliable motivation, and Guise frames his approach as saving willpower, so neither is described correctly." },
+        { "text": "Fogg: start big and cut back. Guise: start tiny.", "why": "Both start tiny." },
+        { "text": "Fogg: anchor it to a routine and celebrate. Guise: a daily minimum you never miss, plus optional bonus reps.", "correct": true, "why": "That's the core contribution of each, and this toolkit uses both." },
+        { "text": "Nothing: they're the same method under two names.", "why": "They overlap, but anchors and celebration are Fogg's; the never-miss minimum and bonus reps are Guise's." }
+      ],
+      "ref": "PRINCIPLES.md §3, §4"
+    },
+    {
+      "id": "mini-habits-apply",
+      "concept": "mini-habits",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "You missed three days in a row because of a family trip. What does this toolkit suggest?",
+      "options": [
+        { "text": "Do triple sessions until you've caught up.", "why": "That raises the bar and turns the habit into a punishment." },
+        { "text": "Wait until Monday for a clean start.", "why": "Waiting for a fresh start is another delay. Today is fine." },
+        { "text": "Delete your progress and restart the deck.", "why": "Unnecessary. Your memory wasn't reset, and the schedule handles the backlog." },
+        { "text": "Do today's one-card minimum, with no make-up sessions.", "correct": true, "why": "In Lally et al. (2010), missing a single day didn't materially set habit formation back. Just come back." }
+      ],
+      "ref": "PRINCIPLES.md §4"
+    },
+    {
+      "id": "mini-habits-teach",
+      "concept": "mini-habits",
+      "type": "feynman",
+      "purpose": "teach",
+      "also": ["tiny-habits"],
+      "prompt": "A friend keeps quitting their study plans. Explain to them why \"one card a day\" is a better plan than \"one hour a day\".",
+      "audience": "a friend who keeps quitting",
+      "word_limit": 120,
+      "rubric": [
+        "Motivation goes up and down, so the plan must work on low days",
+        "A tiny step is easy to start, and starting often leads to more",
+        "Attach it to something you already do every day (an anchor)",
+        "Celebrate right after; the good feeling helps build the habit",
+        "Extra work is a bonus, never a requirement, so there's no guilt"
+      ],
+      "follow_ups": [
+        "One card won't teach me anything. What's the point?",
+        "What do I do on the day I forget?"
+      ],
+      "ref": "PRINCIPLES.md §3, §4"
+    },
+    {
+      "id": "pretesting-pretest",
+      "concept": "pretesting",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Students answer questions about a passage *before* reading it, and get most of them wrong. Compared with students who just spent that time reading, how do they do on a later test of the same questions?",
+      "options": [
+        { "text": "Worse: their wrong guesses get stuck.", "why": "A natural worry, but when the right answer follows, wrong guesses don't tend to stick." },
+        { "text": "Better: even failed attempts improve learning of the answers.", "correct": true, "why": "That's the pretesting effect." },
+        { "text": "The same: guessing makes no difference.", "why": "Studies find a real benefit for pretested material." },
+        { "text": "Better, but only on questions they guessed correctly.", "why": "The benefit shows up even on questions they got wrong." }
+      ],
+      "explanation": "Richland, Kornell & Kao (2009); Kornell, Hays & Bjork (2009).",
+      "ref": "PRINCIPLES.md §5"
+    },
+    {
+      "id": "pretesting-recall",
+      "concept": "pretesting",
+      "type": "mcq",
+      "purpose": "recall",
+      "prompt": "What has to happen *after* a wrong pretest guess for the benefit to appear?",
+      "options": [
+        { "text": "You need to see the correct answer soon after, through feedback or by studying.", "correct": true, "why": "The attempt prepares you; the correct answer is what you then learn better." },
+        { "text": "You must avoid the answer for a few days so the guess fades.", "why": "No. The benefit comes from meeting the answer after the attempt." },
+        { "text": "You must keep guessing until you get it right on your own.", "why": "Unnecessary: one attempt followed by the answer is enough." },
+        { "text": "Nothing: the guess alone does the work.", "why": "Without the correct answer afterwards, there's nothing to learn better." }
+      ],
+      "ref": "PRINCIPLES.md §5"
+    },
+    {
+      "id": "pretesting-why",
+      "concept": "pretesting",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why might guessing first, even wrongly, help you learn the answer? Give two reasons.",
+      "answer": "The attempt switches on related knowledge, so the answer has something to attach to. It also makes you curious, so you pay closer attention when the answer arrives and notice how it differs from your guess.",
+      "key_points": ["The attempt switches on what you already know, so the answer has something to attach to", "You become curious and pay closer attention to the answer (and notice how it differs from your guess)"],
+      "ref": "PRINCIPLES.md §5"
+    },
+    {
+      "id": "pretesting-apply",
+      "concept": "pretesting",
+      "type": "short",
+      "purpose": "apply",
+      "prompt": "You're about to read a paper on a new method. Write two pretest questions to ask yourself before reading.",
+      "answer": "For example: \"What problem does this method solve, and why aren't existing methods good enough?\" and \"If I had to solve it, how would I do it?\" Good pretest questions target the big ideas, can be guessed at, and get answered by the reading.",
+      "key_points": ["They target the main ideas, not trivia", "You could make a reasonable guess", "The reading will answer them"],
+      "ref": "PRINCIPLES.md §5"
+    },
+    {
+      "id": "pretesting-vs-retrieval",
+      "concept": "pretesting",
+      "type": "mcq",
+      "purpose": "compare",
+      "also": ["retrieval"],
+      "prompt": "How is a pretest different from ordinary retrieval practice?",
+      "options": [
+        { "text": "Pretests are graded; retrieval practice isn't.", "why": "Grading isn't the difference. Neither needs to be graded by anyone but you." },
+        { "text": "A pretest happens *before* you've learned the material; retrieval practice recalls what you've already studied.", "correct": true, "why": "Same action (trying to answer), different timing and purpose." },
+        { "text": "Pretests only work with multiple choice.", "why": "They work with open questions too." },
+        { "text": "There's no difference.", "why": "The timing differs, and so does the reason it helps." }
+      ],
+      "ref": "PRINCIPLES.md §1, §5"
+    },
+    {
+      "id": "elaboration-pretest",
+      "concept": "elaboration",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Two learners read: \"Cats see well in dim light.\" Learner A repeats the sentence five times. Learner B asks \"why would that be true?\" and answers \"because they hunt at dawn and dusk.\" Who is more likely to remember it?",
+      "options": [
+        { "text": "Learner A: more repetitions.", "why": "Repetition without meaning is a weak way to remember." },
+        { "text": "Learner B", "correct": true, "why": "Asking and answering \"why?\" connects the fact to what B already knows." },
+        { "text": "Both the same.", "why": "Elaborating usually beats rote repetition." },
+        { "text": "Learner A, because B's reason might be wrong.", "why": "Trying to explain still tends to help. Checking the explanation against the source keeps it accurate." }
+      ],
+      "ref": "PRINCIPLES.md §6"
+    },
+    {
+      "id": "elaboration-recall",
+      "concept": "elaboration",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "Name the two related elaboration techniques that Dunlosky et al. (2013) rated \"moderate utility\", and say what each asks you to do.",
+      "answer": "Elaborative interrogation: ask and answer \"why is this true?\". Self-explanation: explain to yourself how new information connects to what you know, or explain each step while solving a problem.",
+      "key_points": ["Elaborative interrogation: ask and answer why", "Self-explanation: explain how it connects, or explain the steps"],
+      "ref": "PRINCIPLES.md §6"
+    },
+    {
+      "id": "elaboration-why",
+      "concept": "elaboration",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why does connecting a new idea to things you already know make it easier to recall later?",
+      "answer": "Connections give you more routes (cues) back to the memory. The idea is stored as part of an organized web of meaning rather than as an isolated fact.",
+      "key_points": ["More cues / routes back to the memory", "Part of an organized web of meaning, not an isolated fact"],
+      "ref": "PRINCIPLES.md §6"
+    },
+    {
+      "id": "elaboration-apply",
+      "concept": "elaboration",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "Which question about a machine-learning paper is the best *elaborative* question?",
+      "options": [
+        { "text": "What accuracy did the method reach on the main benchmark?", "why": "A useful detail, but a \"what\" question: it doesn't connect ideas." },
+        { "text": "Which year was the paper published?", "why": "Trivia." },
+        { "text": "Why does the added regularizer reduce overfitting in their setup?", "correct": true, "why": "A \"why\" question that forces you to connect the method to what you know about overfitting." },
+        { "text": "What is the name of the dataset in Table 2?", "why": "A detail to recognize, not an idea to explain." }
+      ],
+      "ref": "PRINCIPLES.md §6"
+    },
+    {
+      "id": "interleaving-pretest",
+      "concept": "interleaving",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Students practice volume problems for four kinds of solids. Group 1 does all the problems for one solid, then the next (blocked). Group 2 does the same problems shuffled (interleaved). What happens?",
+      "options": [
+        { "text": "Blocked does better during practice, but interleaved does much better on a test a week later.", "correct": true, "why": "Rohrer & Taylor (2007): about 63% vs. 20% a week later." },
+        { "text": "Blocked does better both during practice and a week later.", "why": "Blocked practice looks better during practice, but that advantage reversed at test." },
+        { "text": "Interleaved does better both during practice and a week later.", "why": "Interleaved practice usually looks and feels *worse* while you're doing it." },
+        { "text": "No meaningful difference.", "why": "The difference in that study was large." }
+      ],
+      "ref": "PRINCIPLES.md §7"
+    },
+    {
+      "id": "interleaving-recall",
+      "concept": "interleaving",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "In Kornell & Bjork's (2008) study, interleaving helped people recognize painters' styles in new paintings. What did most participants *believe* had worked better?",
+      "answer": "Most believed blocked study (one painter at a time) worked better, even though interleaving produced better results.",
+      "key_points": ["They believed blocking worked better", "Interleaving actually worked better"],
+      "ref": "PRINCIPLES.md §7"
+    },
+    {
+      "id": "interleaving-why",
+      "concept": "interleaving",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why does mixing problem types help on a real exam, where problems arrive in no particular order?",
+      "answer": "In blocked practice you know which method to use before you even read the problem. Mixed practice forces you to choose, so you learn to recognize which idea applies and to tell similar ones apart.",
+      "key_points": ["Blocked practice hides the \"which method?\" decision", "Interleaving trains choosing between, and telling apart, similar ideas"],
+      "ref": "PRINCIPLES.md §7"
+    },
+    {
+      "id": "interleaving-apply",
+      "concept": "interleaving",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "This app's review queue rotates through concepts (A, B, C, A, B…) instead of finishing all of A first. Which principle is that, and what's the trade-off?",
+      "options": [
+        { "text": "Spacing: it cuts total study time.", "why": "Rotating concepts *within* a session is interleaving; spacing is about the gaps between days." },
+        { "text": "Interleaving: sessions feel a little harder, but you learn to tell concepts apart.", "correct": true, "why": "Harder now, better later." },
+        { "text": "Pretesting: it gives you more chances to guess.", "why": "Pretesting is about answering *before* learning." },
+        { "text": "Mini habits: it keeps sessions short.", "why": "Session length is set by your minimum, not by the order of cards." }
+      ],
+      "ref": "PRINCIPLES.md §7"
+    },
+    {
+      "id": "interleaving-vs-spacing",
+      "concept": "interleaving",
+      "type": "mcq",
+      "purpose": "compare",
+      "also": ["spacing"],
+      "prompt": "Interleaving and spacing are easy to confuse. Which example is interleaving *without* any extra spacing across days?",
+      "options": [
+        { "text": "Review the same concept on Monday, Thursday and the following Tuesday.", "why": "That's spacing: gaps between days, one concept." },
+        { "text": "Study concept A for 20 minutes today, then concept B tomorrow.", "why": "Each session is blocked on one concept." },
+        { "text": "In one 20-minute session, alternate between questions on three different concepts.", "correct": true, "why": "Mixing within a single session: interleaving." },
+        { "text": "Reread a chapter twice in a row.", "why": "Massed and blocked: neither." }
+      ],
+      "ref": "PRINCIPLES.md §2, §7"
+    },
+    {
+      "id": "calibration-pretest",
+      "concept": "calibration",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "You answer a question you were *certain* about, and you're wrong. Compared with a wrong answer you were unsure about, how likely are you to remember the correction later?",
+      "options": [
+        { "text": "Less likely: confident errors are stubborn.", "why": "Intuitive, but once feedback arrives the evidence shows the opposite." },
+        { "text": "Equally likely.", "why": "Confidence makes a difference." },
+        { "text": "More likely: high-confidence errors tend to be corrected best.", "correct": true, "why": "The hypercorrection effect (Butterfield & Metcalfe, 2001)." },
+        { "text": "It depends only on how many times you've seen the question.", "why": "Confidence matters, not just exposure." }
+      ],
+      "explanation": "The surprise of being confidently wrong seems to make the correction memorable. That's one reason the app asks how sure you are.",
+      "ref": "PRINCIPLES.md §8"
+    },
+    {
+      "id": "calibration-recall",
+      "concept": "calibration",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "What is an \"illusion of competence\" in studying? Name one study habit that creates it.",
+      "answer": "Feeling that you know material because it's familiar or easy to read, when you couldn't actually recall or use it. Rereading, highlighting, or peeking at answers too soon all create it.",
+      "key_points": ["A feeling of knowing based on familiarity, not actual recall", "Example: rereading, highlighting, or peeking at answers"],
+      "ref": "PRINCIPLES.md §8"
+    },
+    {
+      "id": "calibration-why",
+      "concept": "calibration",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why does this app ask how sure you are *before* revealing the answer, rather than after?",
+      "answer": "Once you've seen the answer, hindsight makes everything feel known (\"I knew that\"). Committing first gives an honest record of what you actually knew, so you can compare confidence with accuracy and spot where you're over- or under-confident.",
+      "key_points": ["After seeing the answer, hindsight makes it feel known", "Committing first makes the confidence-vs-accuracy comparison honest"],
+      "ref": "PRINCIPLES.md §8"
+    },
+    {
+      "id": "calibration-apply",
+      "concept": "calibration",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "Your stats say: when you tap *I know it* you're right 95% of the time, but when you tap *I think so* you're right only 40% of the time. What's the most useful conclusion?",
+      "options": [
+        { "text": "Stop using *I think so*.", "why": "The rating is only useful if it's honest. Changing the label doesn't change what you know." },
+        { "text": "Your *I know it* answers are probably lucky.", "why": "95% over many cards isn't luck: that rating is well calibrated." },
+        { "text": "Confidence has nothing to do with learning.", "why": "Calibration tells you where to spend effort." },
+        { "text": "For you, *I think so* is close to a guess: treat those topics as weak spots.", "correct": true, "why": "Now you know where your sense of knowing misleads you." }
+      ],
+      "ref": "PRINCIPLES.md §8"
+    },
+    {
+      "id": "calibration-fooling",
+      "concept": "calibration",
+      "type": "mcq",
+      "purpose": "apply",
+      "also": ["retrieval"],
+      "prompt": "Feynman: *\"The first principle is that you must not fool yourself — and you are the easiest person to fool.\"* Which habit protects you best against fooling yourself about what you know?",
+      "options": [
+        { "text": "Rereading until the material feels familiar.", "why": "Familiarity is exactly how you fool yourself." },
+        { "text": "Testing yourself without looking, then checking.", "correct": true, "why": "Committing to an answer and then checking gives honest evidence." },
+        { "text": "Highlighting the most important parts.", "why": "Choosing what's important isn't the same as being able to recall it." },
+        { "text": "Watching a very clear explanation video.", "why": "Clear explanations feel understood; that's the illusion." }
+      ],
+      "ref": "PRINCIPLES.md §8"
+    },
+    {
+      "id": "desirable-difficulties-pretest",
+      "concept": "desirable-difficulties",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "Which of these difficulties would Robert Bjork call **un**desirable?",
+      "options": [
+        { "text": "Having to recall an answer instead of rereading it.", "why": "Desirable: retrieval is effortful and strengthens memory." },
+        { "text": "Reviewing after a gap of a few days.", "why": "Desirable: spacing." },
+        { "text": "A textbook so far above your level that you can't make sense of it.", "correct": true, "why": "A difficulty only helps if you can meet it with effort. Here you need the prerequisites first." },
+        { "text": "Practicing different problem types mixed together.", "why": "Desirable: interleaving." }
+      ],
+      "ref": "PRINCIPLES.md §9"
+    },
+    {
+      "id": "desirable-difficulties-recall",
+      "concept": "desirable-difficulties",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "What's the difference between **performance** and **learning**, in Bjork's sense? Why does it matter when you judge a study method?",
+      "answer": "Performance is how well you do during or right after practice; learning is the lasting change that shows up later and in new situations. Methods that boost performance now (cramming, blocking, rereading) can produce less learning, so you can't judge a method by how smoothly practice is going.",
+      "key_points": ["Performance: how you do during or soon after practice", "Learning: what lasts and shows up later or in new situations", "Practice that feels good can mean less learning"],
+      "ref": "PRINCIPLES.md §9"
+    },
+    {
+      "id": "desirable-difficulties-why",
+      "concept": "desirable-difficulties",
+      "type": "short",
+      "purpose": "explain",
+      "prompt": "Why do people so often choose rereading, cramming and blocked practice, even though these work worse in the long run?",
+      "answer": "Those methods make practice feel smooth and show quick improvement, which we take as learning. The desirable difficulties feel slow and full of mistakes, so they seem worse even when they work better.",
+      "key_points": ["Easy methods feel fluent and show quick gains", "We mistake that fluency for learning", "Effortful methods feel worse even though they work better"],
+      "ref": "PRINCIPLES.md §8, §9"
+    },
+    {
+      "id": "desirable-difficulties-compare",
+      "concept": "desirable-difficulties",
+      "type": "mcq",
+      "purpose": "compare",
+      "also": ["spacing", "interleaving", "pretesting"],
+      "prompt": "What do spacing, interleaving and pretesting have in common?",
+      "options": [
+        { "text": "They all cut the total time you need to study.", "why": "Not necessarily. The point is better retention for similar time." },
+        { "text": "They all work by making the material feel more familiar.", "why": "The opposite: they make retrieval effortful rather than making things feel familiar." },
+        { "text": "They all rely on rereading.", "why": "None of them does." },
+        { "text": "They make practice feel harder while improving long-term learning.", "correct": true, "why": "They're all desirable difficulties." }
+      ],
+      "ref": "PRINCIPLES.md §9"
+    },
+    {
+      "id": "desirable-difficulties-teach",
+      "concept": "desirable-difficulties",
+      "type": "feynman",
+      "purpose": "teach",
+      "prompt": "A friend says: \"This quiz app makes me feel dumb; rereading makes me feel smart.\" Explain why the app might still be the better choice.",
+      "audience": "a friend who prefers rereading",
+      "word_limit": 120,
+      "rubric": [
+        "Separates feeling like you're learning (performance) from lasting learning",
+        "Explains that effortful recall, mistakes included, strengthens memory",
+        "Says that rereading feels fluent but can fool you",
+        "Acknowledges the difficulty has to be manageable",
+        "No unexplained jargon"
+      ],
+      "follow_ups": [
+        "If I'm getting things wrong, how is that learning?",
+        "So should I make everything as hard as possible?"
+      ],
+      "ref": "PRINCIPLES.md §9"
+    },
+    {
+      "id": "feynman-pretest",
+      "concept": "feynman",
+      "type": "mcq",
+      "purpose": "pretest",
+      "prompt": "People rate how well they understand how a zipper works, then try to explain it step by step, then rate their understanding again. What usually happens?",
+      "options": [
+        { "text": "Their ratings drop after trying to explain.", "correct": true, "why": "The illusion of explanatory depth (Rozenblit & Keil, 2002): explaining reveals the gaps." },
+        { "text": "Their ratings go up, because explaining builds confidence.", "why": "Explaining usually shows people how much they *don't* know." },
+        { "text": "Their ratings stay the same.", "why": "The drop is the classic finding." },
+        { "text": "Only experts' ratings drop.", "why": "It happens to ordinary people with everyday objects." }
+      ],
+      "ref": "PRINCIPLES.md §10"
+    },
+    {
+      "id": "feynman-recall",
+      "concept": "feynman",
+      "type": "short",
+      "purpose": "recall",
+      "prompt": "List the four steps of the Feynman technique, as used in this toolkit.",
+      "answer": "1) Pick a concept. 2) Explain it in plain words to a novice, without notes. 3) Spot the gaps: where you got stuck, used jargon, or hand-waved. 4) Go back to the source, fill the gaps, and explain again more simply (an analogy helps).",
+      "key_points": ["Explain simply to a novice, without notes", "Find the gaps (stuck, jargon, hand-waving)", "Go back to the source", "Simplify and explain again"],
+      "ref": "PRINCIPLES.md §10"
+    },
+    {
+      "id": "feynman-why",
+      "concept": "feynman",
+      "type": "short",
+      "purpose": "explain",
+      "also": ["retrieval", "elaboration", "calibration"],
+      "prompt": "Teaching without notes combines several principles from this deck. Which ones, and how?",
+      "answer": "Retrieval: you pull the idea from memory without notes. Elaboration: you explain why and how, in your own words. Calibration: where you stumble shows honestly what you don't understand yet.",
+      "key_points": ["Retrieval: explaining from memory", "Elaboration: explaining why/how in your own words", "Calibration: stumbles reveal what you don't understand"],
+      "ref": "PRINCIPLES.md §10"
+    },
+    {
+      "id": "feynman-apply",
+      "concept": "feynman",
+      "type": "mcq",
+      "purpose": "apply",
+      "prompt": "While explaining spacing you write: \"Spacing works because of the spacing effect.\" What should you do next?",
+      "options": [
+        { "text": "Move on: you named the right effect.", "why": "Naming isn't explaining." },
+        { "text": "Add more technical terms to make it precise.", "why": "More jargon hides the gap instead of filling it." },
+        { "text": "Look up a better definition and paste it in.", "why": "Copying fills the page, not your understanding. Reread, then explain in your own words." },
+        { "text": "Notice it's circular (a label standing in for an explanation) and go back to find *why* gaps help.", "correct": true, "why": "That's a gap. Go back to the source, then explain the mechanism." }
+      ],
+      "ref": "PRINCIPLES.md §10"
+    },
+    {
+      "id": "feynman-teach",
+      "concept": "feynman",
+      "type": "feynman",
+      "purpose": "teach",
+      "prompt": "Explain the Feynman technique itself to a 12-year-old, including why it works.",
+      "audience": "a 12-year-old",
+      "word_limit": 120,
+      "rubric": [
+        "Describes explaining something in simple words, without notes",
+        "Says that getting stuck shows what you don't understand yet",
+        "Says to go back, learn the missing part, and explain again",
+        "Gives a reason it works (you have to pull it from memory and make sense of it)",
+        "No unexplained jargon"
+      ],
+      "follow_ups": [
+        "How do I know my explanation is right if nobody checks it?",
+        "Why explain it to a kid instead of an expert?"
+      ],
+      "ref": "PRINCIPLES.md §10"
+    }
+  ]
+}
