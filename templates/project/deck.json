@@ -1,0 +1,17 @@
+{
+  "$schema": "../../schema/deck.schema.json",
+  "format": 1,
+  "id": "{{id}}",
+  "title": "{{title}}",
+  "subtitle": "",
+  "source": {
+    "kind": "{{kind}}",
+    "title": "{{source_title}}",
+    "url": "{{url}}"
+  },
+  "goal": "",
+  "audience": "",
+  "habit": { "suggested_anchor": "" },
+  "concepts": [],
+  "questions": []
+}

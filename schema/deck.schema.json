@@ -1,0 +1,153 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/zhuogang/interactive_learning/blob/main/schema/deck.schema.json",
+  "title": "Interactive Learning deck",
+  "description": "One deck.json per project. This schema gives editors autocomplete and catches structural mistakes; `python3 tools/il.py validate` also checks what a schema can't, such as whether prereqs point to earlier concepts.",
+  "type": "object",
+  "required": ["format", "id", "title", "source", "concepts", "questions"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": { "type": "string" },
+    "format": { "const": 1, "description": "Deck format version." },
+    "id": { "$ref": "#/$defs/id", "description": "Must match the project's folder name." },
+    "title": { "$ref": "#/$defs/text" },
+    "subtitle": { "type": "string" },
+    "source": { "$ref": "#/$defs/source" },
+    "goal": { "type": "string", "description": "What the learner should be able to do after this deck." },
+    "audience": { "type": "string", "description": "Who the deck is written for, and what they already know." },
+    "habit": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "suggested_anchor": {
+          "type": "string",
+          "description": "Fills the recipe: 'After I ___, I will answer one card.'"
+        }
+      }
+    },
+    "concepts": {
+      "type": "array",
+      "description": "In teaching order: a concept's prereqs must come before it.",
+      "items": { "$ref": "#/$defs/concept" }
+    },
+    "questions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/question" }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "description": "lowercase-kebab-case"
+    },
+    "text": { "type": "string", "pattern": "\\S" },
+    "textList": { "type": "array", "items": { "$ref": "#/$defs/text" } },
+    "idList": { "type": "array", "items": { "$ref": "#/$defs/id" } },
+    "source": {
+      "type": "object",
+      "required": ["kind", "title"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": ["paper", "book", "chapter", "article", "course", "lecture", "video", "topic", "concept", "other"]
+        },
+        "title": { "$ref": "#/$defs/text" },
+        "authors": { "type": "array", "items": { "type": "string" } },
+        "year": { "type": "integer" },
+        "url": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "concept": {
+      "type": "object",
+      "required": ["id", "title", "summary"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "title": { "$ref": "#/$defs/text" },
+        "summary": { "$ref": "#/$defs/text", "description": "Shown after the pretest. Supports **bold**, *italic*, `code`, [links](https://example.com) and blank-line paragraphs." },
+        "analogy": { "type": "string" },
+        "example": { "type": "string" },
+        "read": { "type": "string", "description": "Where in the source to read, e.g. 'Section 3, pages 4-6'." },
+        "read_url": { "type": "string", "description": "A link for 'read'. Only http(s) links are followed." },
+        "prereqs": { "$ref": "#/$defs/idList", "description": "Concepts that must be listed earlier in the deck." },
+        "jargon": { "$ref": "#/$defs/textList", "description": "Terms flagged while writing a teach-it card." }
+      }
+    },
+    "option": {
+      "type": "object",
+      "required": ["text"],
+      "additionalProperties": false,
+      "properties": {
+        "text": { "$ref": "#/$defs/text" },
+        "correct": { "type": "boolean", "description": "Exactly one option per card is true. Leave it off the others." },
+        "why": { "type": "string", "description": "Feedback shown for this choice, right or wrong." }
+      }
+    },
+    "question": {
+      "type": "object",
+      "required": ["id", "concept", "type", "purpose", "prompt"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "concept": { "$ref": "#/$defs/id" },
+        "also": { "$ref": "#/$defs/idList", "description": "Other concepts this card touches. Compare cards should list them." },
+        "type": { "enum": ["mcq", "short", "feynman"] },
+        "purpose": {
+          "enum": ["pretest", "recall", "explain", "apply", "compare", "teach"],
+          "description": "The card's step on the concept ladder (see PRINCIPLES.md)."
+        },
+        "prompt": { "$ref": "#/$defs/text" },
+        "ref": { "type": "string", "description": "Where in the source this card is grounded, so a learner can check it." },
+        "explanation": { "type": "string", "description": "Shown after the answer." },
+        "options": { "type": "array", "items": { "$ref": "#/$defs/option" } },
+        "answer": { "type": "string" },
+        "key_points": { "$ref": "#/$defs/textList", "description": "The ideas a good answer contains. Used for self-grading." },
+        "audience": { "type": "string" },
+        "word_limit": { "type": "integer", "minimum": 1 },
+        "rubric": { "$ref": "#/$defs/textList" },
+        "follow_ups": { "$ref": "#/$defs/textList", "description": "Questions a curious novice would ask next." }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "const": "mcq" } }, "required": ["type"] },
+          "then": {
+            "required": ["options"],
+            "properties": {
+              "purpose": { "not": { "const": "teach" } },
+              "options": {
+                "minItems": 2,
+                "maxItems": 6,
+                "contains": { "properties": { "correct": { "const": true } }, "required": ["correct"] },
+                "minContains": 1,
+                "maxContains": 1
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "short" } }, "required": ["type"] },
+          "then": {
+            "required": ["answer"],
+            "properties": {
+              "purpose": { "not": { "const": "teach" } },
+              "answer": { "pattern": "\\S" },
+              "key_points": { "minItems": 1 }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "type": { "const": "feynman" } }, "required": ["type"] },
+          "then": {
+            "required": ["rubric"],
+            "properties": {
+              "purpose": { "const": "teach" },
+              "rubric": { "minItems": 2 }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

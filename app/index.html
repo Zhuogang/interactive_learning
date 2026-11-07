@@ -1,0 +1,1819 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Interactive Learning</title>
+<style>
+:root {
+  --bg: #f6f4ee;
+  --surface: #fffdf8;
+  --ink: #23211c;
+  --muted: #625d53;
+  --line: #dcd7ca;
+  --track: #e7e3d8;
+  --accent: #1a6554;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe5;
+  --good: #1a6b43;
+  --good-soft: #dff0e6;
+  --partly: #7d5700;
+  --partly-soft: #f6ecd2;
+  --miss: #a63623;
+  --miss-soft: #f8e4df;
+  --guess-soft: #e9e6f2;
+  --guess: #4b4378;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171613;
+    --surface: #211f1b;
+    --ink: #ece8df;
+    --muted: #a9a396;
+    --line: #3a372f;
+    --track: #35322b;
+    --accent: #66c9b0;
+    --accent-ink: #0d1f1a;
+    --accent-soft: #1f3a33;
+    --good: #72d3a0;
+    --good-soft: #1b3326;
+    --partly: #e6c066;
+    --partly-soft: #3a2f14;
+    --miss: #f2998a;
+    --miss-soft: #40211b;
+    --guess-soft: #2b2840;
+    --guess: #bdb5ec;
+  }
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 1rem/1.55 var(--sans);
+  overflow-wrap: anywhere;
+}
+main { max-width: 38rem; margin: 0 auto; padding: 1rem 1rem 5rem; }
+a { color: var(--accent); }
+p { margin: 0 0 .75rem; }
+p:last-child { margin-bottom: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; } /* headings get focus for screen readers, not as a control */
+code { font: .9em var(--mono); background: var(--track); padding: .1em .3em; border-radius: 4px; }
+kbd {
+  font: 600 .72rem var(--mono);
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0 .3rem;
+  flex: none;
+}
+@media (hover: none), (pointer: coarse) { kbd { display: none; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.muted { color: var(--muted); }
+.small { font-size: .875rem; }
+.title { font: 500 2.1rem/1.15 var(--serif); margin: .75rem 0 .35rem; letter-spacing: -.01em; }
+.lede { color: var(--muted); margin-bottom: 1.25rem; }
+.crumb { display: inline-flex; flex: none; align-items: center; min-height: 44px; color: var(--muted); text-decoration: none; font-size: .9rem; white-space: nowrap; }
+.crumb:hover { color: var(--ink); }
+
+/* Panels */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.1rem;
+  margin-bottom: 1rem;
+}
+.panel > h2 { font: 600 .95rem/1.3 var(--sans); margin: 0 0 .6rem; }
+.panel > summary { font: 600 .95rem/1.3 var(--sans); cursor: pointer; min-height: 28px; }
+.panel[open] > summary { margin-bottom: .75rem; }
+
+/* Buttons */
+.btn {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 46px;
+  padding: .55rem 1.1rem;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: 600 1rem/1.2 var(--sans);
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.wide { width: 100%; }
+.btn.quiet { min-height: 44px; font-weight: 500; font-size: .92rem; }
+.row { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+.linkish {
+  appearance: none; background: none; border: 0; padding: 0; min-height: 44px;
+  color: var(--accent); font: 500 .9rem var(--sans); text-decoration: underline; cursor: pointer;
+}
+
+/* Fields */
+textarea, input[type=text], input[type=number] {
+  width: 100%;
+  font: 400 1rem/1.5 var(--sans);
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: .6rem .75rem;
+}
+textarea { min-height: 7rem; resize: vertical; display: block; }
+textarea.tall { min-height: 12rem; }
+input::placeholder, textarea::placeholder { color: var(--muted); }
+
+/* Deck list */
+.deck-row {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  padding: 1rem 1.1rem; margin-bottom: .75rem;
+}
+.deck-row:hover { border-color: var(--muted); }
+.deck-row strong { display: block; font: 500 1.25rem/1.25 var(--serif); }
+
+/* Today panel */
+.recipe-label { display: block; font-weight: 600; margin-bottom: .3rem; }
+.recipe-rest { margin: .45rem 0 1rem; }
+.today-status { display: flex; align-items: center; gap: .45rem; margin-bottom: .8rem; }
+.pill {
+  display: inline-flex; align-items: center; gap: .3rem;
+  font-weight: 600; font-size: .9rem; color: var(--good); background: var(--good-soft);
+  border-radius: 99px; padding: .15rem .65rem;
+}
+
+/* Show-up grid */
+.days { display: grid; grid-template-columns: repeat(14, 1fr); gap: 4px; max-width: 26rem; margin-bottom: .6rem; }
+.day { aspect-ratio: 1; border-radius: 4px; background: var(--track); }
+.day.on { background: var(--accent); }
+.day.today { box-shadow: 0 0 0 1.5px var(--surface), 0 0 0 3px var(--muted); }
+
+/* Meters */
+.meter { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.meter > span { display: block; height: 100%; border-radius: 3px; background: var(--accent); min-width: 0; }
+.concept { border-top: 1px solid var(--line); padding: .6rem 0; }
+.concept:first-of-type { border-top: 0; padding-top: 0; }
+.concept:last-child { padding-bottom: 0; }
+.concept-head { display: flex; justify-content: space-between; gap: 1rem; margin-bottom: .35rem; font-size: .95rem; }
+.concept summary { cursor: pointer; list-style: none; }
+.concept summary::-webkit-details-marker { display: none; }
+.concept .chev { display: inline-block; width: 1em; color: var(--muted); transition: transform .12s; }
+.concept details[open] .chev { transform: rotate(90deg); }
+.concept details[open] > summary { margin-bottom: .6rem; }
+@media (prefers-reduced-motion: reduce) { .concept .chev { transition: none; } }
+.concept .pct { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+.cal-row { margin-bottom: .75rem; }
+.cal-row .num { color: var(--muted); font-variant-numeric: tabular-nums; flex: none; }
+
+/* Study */
+.study-bar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; color: var(--muted); font-size: .9rem; text-align: right; }
+.eyebrow { color: var(--muted); font-size: .84rem; font-weight: 600; margin: .75rem 0 .35rem; }
+.eyebrow .tag { color: var(--accent); }
+.prompt { font: 500 1.42rem/1.33 var(--serif); margin: 0 0 .9rem; }
+.hint { color: var(--muted); font-size: .92rem; margin-bottom: .9rem; }
+.options { display: grid; gap: .55rem; margin-bottom: 1rem; }
+.option {
+  appearance: none;
+  display: flex; gap: .65rem; align-items: baseline;
+  width: 100%; min-height: 48px; text-align: left;
+  padding: .7rem .9rem;
+  background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px;
+  font: 400 1rem/1.45 var(--sans);
+  cursor: pointer;
+}
+.option:hover { border-color: var(--muted); }
+.option[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.commit { margin-top: .25rem; }
+.commit-label { font-weight: 600; margin-bottom: .45rem; }
+.commit-label .muted { font-weight: 400; }
+.triple { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5rem; }
+.triple .btn { padding: .5rem .35rem; flex-direction: column; gap: .1rem; font-size: .95rem; }
+.btn[disabled] { opacity: .45; cursor: not-allowed; border-color: var(--line); }
+
+.banner { display: flex; gap: .55rem; border-radius: 10px; padding: .7rem .85rem; margin-bottom: .9rem; }
+.banner .ico { font-weight: 700; flex: none; }
+.banner.good { background: var(--good-soft); } .banner.good .ico { color: var(--good); }
+.banner.partly { background: var(--partly-soft); } .banner.partly .ico { color: var(--partly); }
+.banner.again { background: var(--miss-soft); } .banner.again .ico { color: var(--miss); }
+.banner.guess { background: var(--guess-soft); } .banner.guess .ico { color: var(--guess); }
+
+.result { display: grid; gap: .55rem; margin-bottom: 1rem; }
+.res { border: 1px solid var(--line); border-radius: 10px; padding: .65rem .85rem; background: var(--surface); }
+.res-head { display: flex; gap: .5rem; align-items: baseline; }
+.res-ico { width: 1em; flex: none; font-weight: 700; }
+.res.correct { border-color: var(--good); box-shadow: inset 0 0 0 1px var(--good); }
+.res.correct .res-ico { color: var(--good); }
+.res.chosen .res-ico { color: var(--miss); }
+.res.chosen { border-color: var(--miss); }
+.res-tag { font-size: .8rem; color: var(--muted); font-weight: 600; }
+.res-why { color: var(--muted); font-size: .92rem; margin: .25rem 0 0 1.5em; }
+
+.block { margin-bottom: 1rem; }
+.block-label { font-weight: 600; font-size: .9rem; margin-bottom: .3rem; }
+.answer { font: 400 1.08rem/1.5 var(--serif); }
+.yours { border-left: 3px solid var(--line); padding-left: .8rem; color: var(--muted); white-space: pre-wrap; }
+.checks { display: grid; gap: .1rem; margin: 0; padding: 0; list-style: none; }
+.checks label { display: flex; gap: .6rem; align-items: flex-start; padding: .45rem 0; cursor: pointer; min-height: 44px; }
+.checks input { width: 1.15rem; height: 1.15rem; margin: .18rem 0 0; accent-color: var(--accent); flex: none; }
+.grade .sugg { display: block; font-size: .72rem; font-weight: 500; color: var(--muted); }
+.grade.sugg-on { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.grade .sugg[hidden] { display: none; }
+.grade .ico-again { color: var(--miss); } .grade .ico-partly { color: var(--partly); } .grade .ico-good { color: var(--good); }
+.ref { font-size: .85rem; color: var(--muted); margin-bottom: .75rem; }
+.gap { margin-top: .5rem; font-size: .92rem; }
+.gap summary { cursor: pointer; color: var(--muted); min-height: 32px; }
+.gap[open] summary { margin-bottom: .4rem; }
+.gap textarea { min-height: 4.5rem; margin-bottom: .5rem; }
+.note { background: var(--accent-soft); border-radius: 10px; padding: .7rem .85rem; margin-bottom: .75rem; }
+.note-label { font-weight: 600; font-size: .85rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: .35rem .4rem; margin-bottom: .75rem; font-size: .88rem; align-items: baseline; }
+.chip { border: 1px solid var(--line); border-radius: 99px; padding: 0 .55rem; }
+.chip.hit { background: var(--partly-soft); border-color: var(--partly); }
+.counter { display: flex; justify-content: space-between; gap: 1rem; margin: .35rem 0 .9rem; font-size: .88rem; color: var(--muted); }
+.counter .over { color: var(--miss); font-weight: 600; }
+.spotted { margin: 0 0 .75rem; font-size: .9rem; }
+.spotted[hidden] { display: none; }
+.follow { margin: 0; padding-left: 1.2rem; }
+.follow li { margin-bottom: .3rem; font-family: var(--serif); font-size: 1.04rem; }
+
+/* Celebrate */
+.celebrate { text-align: center; padding: 2.5rem 0 1.5rem; position: relative; }
+.yes { font: 500 4rem/1 var(--serif); color: var(--accent); margin: 0 0 1rem; animation: pop .45s cubic-bezier(.2, 1.6, .4, 1) both; }
+.celebrate-body { max-width: 28rem; margin: 0 auto 1.5rem; }
+.celebrate .row { justify-content: center; }
+.burst { position: absolute; left: 50%; top: 4.5rem; width: 0; height: 0; pointer-events: none; }
+.burst i {
+  position: absolute; width: 8px; height: 8px; margin: -4px; border-radius: 50%;
+  background: var(--accent);
+  animation: fly .9s ease-out both;
+  transform: rotate(var(--a)) translateY(0) scale(.2);
+  opacity: 0;
+}
+.burst i:nth-child(3n) { background: var(--partly); }
+.burst i:nth-child(3n + 1) { background: var(--guess); }
+@keyframes fly {
+  0% { transform: rotate(var(--a)) translateY(0) scale(.2); opacity: 1; }
+  70% { opacity: 1; }
+  100% { transform: rotate(var(--a)) translateY(var(--d)) scale(1); opacity: 0; }
+}
+@keyframes pop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .yes { animation: none; }
+  .burst { display: none; }
+}
+
+.toast {
+  position: fixed; left: 50%; bottom: 1.25rem; transform: translateX(-50%);
+  width: max-content; max-width: min(34rem, calc(100vw - 2rem));
+  background: var(--ink); color: var(--bg);
+  border-radius: 10px; padding: .6rem .95rem; font-size: .93rem;
+  z-index: 10;
+}
+.toast[hidden] { display: none; }
+.foot { margin-top: 2rem; font-size: .88rem; color: var(--muted); }
+pre.cmd { font: .85rem/1.45 var(--mono); background: var(--track); border-radius: 8px; padding: .6rem .75rem; overflow-x: auto; margin: 0 0 .75rem; white-space: pre-wrap; }
+.field { display: block; margin-bottom: .8rem; }
+.field span { display: block; font-weight: 600; font-size: .92rem; margin-bottom: .2rem; }
+.field input { max-width: 7rem; }
+.gap-item { display: flex; justify-content: space-between; align-items: flex-start; gap: .75rem; border-top: 1px solid var(--line); padding: .4rem 0; }
+.gap-item:first-of-type { border-top: 0; }
+.file-btn input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.file-btn:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main id="app"><p class="muted" style="padding-top:2rem">Loading…</p></main>
+<div id="toast" class="toast" role="status" hidden></div>
+<div id="live" class="sr" aria-live="polite"></div>
+<noscript><p style="padding:1rem">This app needs JavaScript. You can study without it: see <code>prompts/session.md</code>.</p></noscript>
+
+<!--
+  Core: scheduling and the progress file. No DOM here.
+  This is a mirror of tools/il.py. Change both together; tests/test_parity.py runs
+  this block in Node and fails if the two disagree.
+-->
+<script id="core">
+const Core = (() => {
+  const FORMAT = 1;
+  const INTERVALS = { 1: 1, 2: 3, 3: 7, 4: 14, 5: 30, 6: 60 };
+  const MAX_BOX = 6;
+  const GRADES = ["again", "partly", "good"];
+  const CONFIDENCE = ["guess", "think", "know"];
+  const SCORE = { again: 0, partly: 0.5, good: 1 };
+  const DEFAULT_SETTINGS = { minimum: 1, new_per_day: 5, anchor: "" };
+  const ENTRY_KEYS = ["at", "q", "grade", "conf", "score", "pretest", "via"];
+  const GAP_KEYS = ["at", "q", "text", "closed", "card"];
+
+  const pad = (n) => String(n).padStart(2, "0");
+  const today = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const now = (d = new Date()) => `${today(d)}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  const addDays = (day, n) => {
+    const [y, m, d] = day.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10);
+  };
+  const cmp = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  const byAt = (a, b) => cmp(a.at, b.at);
+  const isObj = (x) => x !== null && typeof x === "object" && !Array.isArray(x);
+
+  // Card state is a pure function of the answer log. See replay() in tools/il.py.
+  function replay(log) {
+    const cards = Object.create(null);
+    for (const e of [...log].sort(byAt)) {
+      const day = e.at.slice(0, 10);
+      const c = cards[e.q] || { box: 0, due: null, reps: 0, lapses: 0, last: null };
+      let lapses = c.lapses, box;
+      if (e.pretest) box = 1;
+      else if (e.grade === "again") {
+        box = 1;
+        if (c.box >= 2) lapses += 1;
+      } else if (e.grade === "partly" || c.last === day) box = Math.max(1, c.box);
+      else box = Math.min(MAX_BOX, c.box + 1);
+      cards[e.q] = { box, due: addDays(day, INTERVALS[box]), reps: c.reps + 1, lapses, last: day };
+    }
+    return cards;
+  }
+
+  // Unseen cards inside a concept: pretest, then the rest, teach-back last.
+  const rank = (q) => (q.purpose === "pretest" ? 0 : q.type === "feynman" ? 2 : 1);
+
+  // Round-robin across concepts, keeping each concept's internal order.
+  function interleave(items) {
+    const groups = new Map();
+    for (const q of items) {
+      if (!groups.has(q.concept)) groups.set(q.concept, []);
+      groups.get(q.concept).push(q);
+    }
+    const out = [];
+    while (groups.size) {
+      for (const [k, g] of groups) {
+        out.push(g.shift());
+        if (!g.length) groups.delete(k);
+      }
+    }
+    return out;
+  }
+
+  function firstSeen(log) {
+    const seen = new Map();
+    for (const e of [...log].sort(byAt)) if (!seen.has(e.q)) seen.set(e.q, e.at.slice(0, 10));
+    return seen;
+  }
+
+  function buildQueue(deck, log, settings, day) {
+    const cards = replay(log);
+    const qs = deck.questions || [];
+    const order = new Map((deck.concepts || []).map((c, i) => [c.id, i]));
+    const due = qs.filter((q) => cards[q.id] && cards[q.id].due <= day);
+    due.sort((a, b) =>
+      cmp(cards[a.id].due, cards[b.id].due) ||
+      cards[a.id].box - cards[b.id].box ||
+      (order.get(a.concept) || 0) - (order.get(b.concept) || 0));
+    let newToday = 0;
+    for (const d of firstSeen(log).values()) if (d === day) newToday += 1;
+    const perDay = settings.new_per_day === undefined ? 5 : Math.trunc(settings.new_per_day);
+    let budget = Math.max(0, perDay - newToday);
+    const fresh = [];
+    for (const concept of deck.concepts || []) {
+      if (budget <= 0) break;
+      const unseen = qs.filter((q) => q.concept === concept.id && !cards[q.id]);
+      unseen.sort((a, b) => rank(a) - rank(b));
+      const take = unseen.slice(0, budget);
+      fresh.push(...take);
+      budget -= take.length;
+    }
+    return [interleave(due), fresh];
+  }
+
+  function queueItems(deck, log, settings, day) {
+    const [due, fresh] = buildQueue(deck, log, settings, day);
+    const cards = replay(log);
+    const introduced = new Set((deck.questions || [])
+      .filter((q) => cards[q.id] && q.purpose !== "pretest").map((q) => q.concept));
+    const items = due.map((q) => ({
+      q: q.id, concept: q.concept, kind: "review", box: cards[q.id].box,
+      type: q.type, purpose: q.purpose, prompt: q.prompt,
+    }));
+    for (const q of fresh) {
+      const intro = q.purpose !== "pretest" && !introduced.has(q.concept);
+      if (intro) introduced.add(q.concept);
+      items.push({ q: q.id, concept: q.concept, kind: "new", intro, type: q.type, purpose: q.purpose, prompt: q.prompt });
+    }
+    return items;
+  }
+
+  const answeredOn = (log, day) => log.filter((e) => e.at.slice(0, 10) === day).length;
+
+  // Same as Python's round(x, 2): exact binary value, ties to even.
+  function round2(x) {
+    const r = Number(x.toFixed(2));
+    const tie = (x * 8) % 2 === 1; // only k/8 with odd k lands exactly between two cents
+    return tie && Math.round(r * 100) % 2 === 1 ? Math.round(r * 100 - 1) / 100 : r;
+  }
+
+  function makeEntry(q, cards, grade, conf = null, score = null, via = "app", at = null) {
+    // A correct answer you were guessing counts as partly. Luck isn't knowledge.
+    const entry = { at: at || now(), q: q.id, grade: grade === "good" && conf === "guess" ? "partly" : grade };
+    if (conf) entry.conf = conf;
+    // The grade is the decision, and calibration reads the score, so they can't disagree.
+    // A score only adds detail to "partly": how much of it you had.
+    const refined = grade === "partly" && score !== null && Number(score) > 0 && Number(score) < 1;
+    entry.score = round2(refined ? Number(score) : SCORE[grade]);
+    if (q.purpose === "pretest" && !cards[q.id]) entry.pretest = true;
+    entry.via = via;
+    return entry;
+  }
+
+  function makeTeachback(q, text, entry) {
+    const t = text.trim();
+    return { at: entry.at, q: q.id, text: t, words: t.split(/\s+/).length, score: entry.score };
+  }
+
+  function mastery(deck, cards) {
+    const out = {};
+    for (const c of deck.concepts || []) {
+      const qs = (deck.questions || []).filter((q) => q.concept === c.id);
+      out[c.id] = qs.length
+        ? qs.reduce((sum, q) => sum + Math.min(cards[q.id] ? cards[q.id].box : 0, 4) / 4, 0) / qs.length
+        : null;
+    }
+    return out;
+  }
+
+  // Mean score per confidence level, excluding pretests.
+  function calibration(deck, log) {
+    const known = new Set((deck.questions || []).map((q) => q.id));
+    const stats = { guess: [0, 0], think: [0, 0], know: [0, 0] };
+    for (const e of log) {
+      if (e.pretest || !stats[e.conf] || !known.has(e.q)) continue;
+      stats[e.conf][0] += 1;
+      stats[e.conf][1] += Number(e.score !== undefined ? e.score : SCORE[e.grade] || 0);
+    }
+    const out = {};
+    for (const k of CONFIDENCE) out[k] = [stats[k][0], stats[k][0] ? stats[k][1] / stats[k][0] : null];
+    return out;
+  }
+
+  // A real date in the one layout both tools write. Scheduling does date math on these.
+  function validAt(x) {
+    if (typeof x !== "string" || !/^[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}$/.test(x)) return false;
+    const [y, m, d] = x.slice(0, 10).split("-").map(Number);
+    const date = new Date(Date.UTC(y, m - 1, d));
+    return date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
+  }
+
+  const validEntry = (e) => isObj(e) && validAt(e.at) && typeof e.q === "string"
+    && GRADES.includes(e.grade)
+    && (!("conf" in e) || CONFIDENCE.includes(e.conf))
+    && (!("score" in e) || typeof e.score === "number");
+
+  function cleanSettings(x) {
+    const out = { ...DEFAULT_SETTINGS };
+    if (isObj(x)) {
+      for (const [k, v] of Object.entries(x)) {
+        if ((k === "anchor" && typeof v !== "string")
+            || (k === "minimum" && !(Number.isInteger(v) && v >= 1))
+            || (k === "new_per_day" && !(Number.isInteger(v) && v >= 0))) continue;
+        out[k] = v;
+      }
+    }
+    return out;
+  }
+
+  function cleanFeynman(x) {
+    const out = {};
+    if (isObj(x)) {
+      for (const [c, entries] of Object.entries(x)) {
+        if (Array.isArray(entries)) out[c] = entries.filter((e) => isObj(e) && validAt(e.at) && typeof e.text === "string");
+      }
+    }
+    return out;
+  }
+
+  // Everything read from a file or storage passes through here, so a bad row can't break scheduling.
+  function normalizeProgress(p, id) {
+    p = isObj(p) ? p : {};
+    const list = (x) => (Array.isArray(x) ? x : []);
+    return {
+      format: FORMAT,
+      deck: p.deck === undefined ? id : p.deck,
+      settings: cleanSettings(p.settings),
+      settings_at: validAt(p.settings_at) ? p.settings_at : "",
+      log: list(p.log).filter(validEntry),
+      feynman: cleanFeynman(p.feynman),
+      gaps: list(p.gaps).filter((g) => isObj(g) && validAt(g.at) && typeof g.text === "string"),
+    };
+  }
+
+  // JSON text identical to Python's json.dumps: scores always print as floats (1.0, not 1).
+  function flat(v, key) {
+    if (Array.isArray(v)) return "[" + v.map((x) => flat(x)).join(", ") + "]";
+    if (isObj(v)) return "{" + Object.keys(v).map((k) => JSON.stringify(k) + ": " + flat(v[k], k)).join(", ") + "}";
+    if (key === "score" && Number.isInteger(v)) return v.toFixed(1);
+    return JSON.stringify(v);
+  }
+
+  function pretty(v, ind, key) {
+    const inner = ind + "  ";
+    if (Array.isArray(v)) {
+      if (!v.length) return "[]";
+      return "[\n" + v.map((x) => inner + pretty(x, inner)).join(",\n") + "\n" + ind + "]";
+    }
+    if (isObj(v)) {
+      const keys = Object.keys(v);
+      if (!keys.length) return "{}";
+      return "{\n" + keys.map((k) => inner + JSON.stringify(k) + ": " + pretty(v[k], inner, k)).join(",\n") + "\n" + ind + "}";
+    }
+    return flat(v, key);
+  }
+
+  function rows(entries, keys) {
+    return entries.map((e, i) => {
+      const ordered = {};
+      for (const k of keys) if (k in e) ordered[k] = e[k];
+      for (const k of Object.keys(e)) if (!(k in ordered)) ordered[k] = e[k];
+      return "    " + flat(ordered) + (i < entries.length - 1 ? "," : "");
+    });
+  }
+
+  // One log entry per line, so git diffs stay readable. Byte-identical to il.py.
+  function formatProgress(p) {
+    return [
+      "{",
+      `  "format": ${p.format},`,
+      `  "deck": ${JSON.stringify(p.deck)},`,
+      `  "settings": ${flat(p.settings)},`,
+      `  "settings_at": ${JSON.stringify(p.settings_at || "")},`,
+      '  "log": [',
+      ...rows(p.log, ENTRY_KEYS),
+      "  ],",
+      `  "feynman": ${pretty(p.feynman, "  ")},`,
+      '  "gaps": [',
+      ...rows(p.gaps || [], GAP_KEYS),
+      "  ]",
+      "}",
+    ].join("\n") + "\n";
+  }
+
+  function mergeProgress(local, incoming) {
+    const key = (e) => e.at + "\u0000" + e.q;
+    const seen = new Set(local.log.map(key));
+    const log = [...local.log, ...incoming.log.filter((e) => !seen.has(key(e)))].sort(byAt);
+    const feynman = {};
+    for (const [c, v] of Object.entries(local.feynman)) feynman[c] = [...v];
+    for (const [c, entries] of Object.entries(incoming.feynman)) {
+      const have = new Set((feynman[c] || []).map((e) => e.at));
+      feynman[c] = [...(feynman[c] || []), ...entries.filter((e) => !have.has(e.at))]
+        .sort((a, b) => cmp(a.at || "", b.at || ""));
+    }
+    // Settings: whichever side changed them most recently wins. A tie keeps the local copy.
+    const winner = (incoming.settings_at || "") > (local.settings_at || "") ? incoming : local;
+    const gapKey = (g) => g.at + "\u0000" + g.text;
+    const gaps = new Map((local.gaps || []).map((g) => [gapKey(g), { ...g }]));
+    for (const g of incoming.gaps || []) {
+      const have = gaps.get(gapKey(g));
+      if (!have) gaps.set(gapKey(g), { ...g });
+      else { // closed on either side stays closed
+        if (g.closed) have.closed = true;
+        if (g.card && !have.card) have.card = g.card;
+      }
+    }
+    return {
+      ...local, settings: { ...winner.settings }, settings_at: winner.settings_at || "",
+      log, feynman, gaps: [...gaps.values()].sort(byAt),
+    };
+  }
+
+  return {
+    INTERVALS, DEFAULT_SETTINGS, today, now, addDays, replay, interleave, buildQueue, queueItems, answeredOn,
+    makeEntry, makeTeachback, mastery, calibration, normalizeProgress, formatProgress, mergeProgress,
+  };
+})();
+</script>
+
+<script>
+(() => {
+  "use strict";
+  const {
+    INTERVALS, today, now, addDays, replay, queueItems, answeredOn, makeEntry, makeTeachback,
+    mastery, calibration, normalizeProgress, formatProgress, mergeProgress,
+  } = Core;
+
+  const PRINCIPLES_URL = "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md";
+  const PURPOSE = {
+    pretest: "Guess first", recall: "Recall", explain: "Why / how",
+    apply: "Use it", compare: "Tell apart", teach: "Teach it",
+  };
+  const CONF = [
+    { id: "guess", label: "Guessing", key: "g" },
+    { id: "think", label: "I think so", key: "t" },
+    { id: "know", label: "I know it", key: "k" },
+  ];
+  const WHEN = { 1: "tomorrow", 3: "in 3 days", 7: "in a week", 14: "in 2 weeks", 30: "in a month", 60: "in 2 months" };
+  const MAX_RETRIES = 2; // a missed card comes back in the session, but not forever
+
+  const $app = document.getElementById("app");
+  const $toast = document.getElementById("toast");
+  const $live = document.getElementById("live");
+
+  const app = {
+    manifest: null,
+    manifestError: null,
+    decks: new Map(),
+    progress: new Map(),
+    session: null,
+    keys: {},
+    routeToken: 0,
+    firstRoute: true,
+    settingsOpen: false,
+  };
+
+  // -------------------------------------------------------------------------
+  // Small helpers
+  // -------------------------------------------------------------------------
+
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v === null || v === undefined || v === false) continue;
+      if (k === "class") el.className = v;
+      else if (k === "html") el.innerHTML = v;
+      else if (k === "value") el.value = v;
+      else if (k === "checked") el.checked = true;
+      else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    el.append(...kids.flat(Infinity).filter((x) => x !== null && x !== undefined && x !== false));
+    return el;
+  }
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+  // Deck text is escaped first, then a small safe subset of Markdown is applied.
+  function inline(s) {
+    const codes = [];
+    let t = esc(s).replace(/`([^`\n]+)`/g, (_, c) => {
+      codes.push(c);
+      return `\u0000${codes.length - 1}\u0000`;
+    });
+    t = t.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+    t = t.replace(/\*\*(?=\S)(.+?)(?<=\S)\*\*/g, "<strong>$1</strong>");
+    t = t.replace(/\*(?=\S)(.+?)(?<=\S)\*/g, "<em>$1</em>");
+    return t.replace(/\u0000(\d+)\u0000/g, (_, i) => `<code>${codes[i]}</code>`);
+  }
+  const blocks = (s) => String(s).split(/\n{2,}/).map((p) => `<p>${inline(p).replace(/\n/g, "<br>")}</p>`).join("");
+  const safeUrl = (u) => (typeof u === "string" && /^https?:\/\//i.test(u) ? u : null);
+
+  const cardsWord = (n) => (n === 1 ? "one card" : `${n} cards`);
+  const countOf = (n, one, many = one + "s") => `${n} ${n === 1 ? one : many}`;
+  const countWords = (t) => (t.trim() ? t.trim().split(/\s+/).length : 0);
+  const prettyDay = (day) => {
+    const [y, m, d] = day.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  };
+
+  function shuffled(list) {
+    const a = [...list];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  let toastTimer = null;
+  function toast(msg, ms = 3200) {
+    $toast.textContent = msg;
+    $toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { $toast.hidden = true; }, ms);
+  }
+  const announce = (msg) => { $live.textContent = msg; };
+
+  // localStorage can throw or vanish (private windows, blocked site data). Keep working in memory.
+  const store = (() => {
+    const mem = new Map();
+    return {
+      get(k) {
+        try {
+          const v = localStorage.getItem(k);
+          if (v !== null) return v;
+        } catch (_) { /* fall through to memory */ }
+        return mem.has(k) ? mem.get(k) : null;
+      },
+      set(k, v) {
+        mem.set(k, v);
+        try {
+          localStorage.setItem(k, v);
+          return true;
+        } catch (_) {
+          return false;
+        }
+      },
+      remove(k) {
+        mem.delete(k);
+        try { localStorage.removeItem(k); } catch (_) { /* nothing to remove */ }
+      },
+    };
+  })();
+
+  function readJSON(k) {
+    const raw = store.get(k);
+    if (raw === null) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  async function fetchJSON(url) {
+    const res = await fetch(url, { cache: "no-store" }); // a chat session may have just changed the file
+    if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+    return res.json();
+  }
+
+  function download(name, text) {
+    const url = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+    const a = h("a", { href: url, download: name });
+    document.body.append(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // -------------------------------------------------------------------------
+  // Decks and progress
+  // -------------------------------------------------------------------------
+
+  const progressKey = (id) => "il:progress:" + id;
+  const deckKey = (id) => "il:deck:" + id;
+  const customIds = () => {
+    const ids = readJSON("il:custom");
+    return Array.isArray(ids) ? ids : [];
+  };
+  const prog = (id) => app.progress.get(id);
+
+  function usableCard(q, conceptIds) {
+    if (!q || typeof q.id !== "string" || !conceptIds.has(q.concept) || typeof q.prompt !== "string") return false;
+    if (q.type === "mcq") {
+      return Array.isArray(q.options) && q.options.length >= 2
+        && q.options.every((o) => o && typeof o.text === "string")
+        && q.options.filter((o) => o.correct === true).length === 1;
+    }
+    if (q.type === "short") return typeof q.answer === "string";
+    if (q.type === "feynman") return Array.isArray(q.rubric);
+    return false;
+  }
+
+  function prepareDeck(raw) {
+    if (!raw || typeof raw !== "object" || typeof raw.id !== "string"
+        || !Array.isArray(raw.concepts) || !Array.isArray(raw.questions)) {
+      throw new Error("This file doesn't look like a deck. A deck has an id, concepts and questions.");
+    }
+    const concepts = raw.concepts.filter((c) => c && typeof c.id === "string");
+    const conceptIds = new Set(concepts.map((c) => c.id));
+    const questions = raw.questions.filter((q) => usableCard(q, conceptIds));
+    return { ...raw, concepts, questions, skipped: raw.questions.length - questions.length };
+  }
+
+  async function loadManifest() {
+    try {
+      app.manifest = await fetchJSON("../projects/manifest.json");
+      app.manifestError = null;
+    } catch (e) {
+      if (!app.manifest) app.manifestError = e;
+    }
+  }
+
+  const manifestDecks = () => (app.manifest && Array.isArray(app.manifest.decks) ? app.manifest.decks : []);
+
+  function deckEntries() {
+    const custom = customIds().map((id) => {
+      const raw = readJSON(deckKey(id)) || {};
+      return { id, title: raw.title || id, subtitle: raw.subtitle || "", custom: true };
+    });
+    const ids = new Set(custom.map((d) => d.id));
+    return [...custom, ...manifestDecks().filter((d) => !ids.has(d.id))];
+  }
+
+  // Called on every navigation: a chat session may have changed the deck or the answers
+  // while this tab was open, and the queue must not offer a card already answered there.
+  async function ensureDeck(id) {
+    const entry = manifestDecks().find((d) => d.id === id);
+    let raw = readJSON(deckKey(id));
+    if (!raw) {
+      if (!entry) throw new Error(`There's no deck called "${id}".`);
+      try {
+        raw = await fetchJSON("../projects/" + entry.path);
+      } catch (e) {
+        if (!app.decks.has(id)) throw e; // otherwise keep going with the copy we have
+      }
+    }
+    const deck = raw ? prepareDeck(raw) : app.decks.get(id);
+    if (deck.skipped) console.warn(`${id}: skipped ${deck.skipped} unusable cards; run: python3 tools/il.py validate ${id}`);
+    const local = app.progress.get(id) || readJSON(progressKey(id));
+    let p = normalizeProgress(local, id);
+    let picked = false;
+    if (entry) {
+      // Answers recorded in chat live in progress.json next to the deck. Pick them up.
+      try {
+        const dir = entry.path.replace(/deck\.json$/, "");
+        const remote = normalizeProgress(await fetchJSON(`../projects/${dir}progress.json`), id);
+        if (remote.deck === id) {
+          p = local ? mergeProgress(p, remote) : remote;
+          picked = true;
+        }
+      } catch (_) { /* no progress file yet: that's fine */ }
+    }
+    app.decks.set(id, deck);
+    app.progress.set(id, p);
+    if (picked) persist(id);
+  }
+
+  function persist(id) {
+    const stored = readJSON(progressKey(id));
+    if (stored) app.progress.set(id, mergeProgress(prog(id), normalizeProgress(stored, id))); // another tab may have written
+    const ok = store.set(progressKey(id), JSON.stringify(prog(id)));
+    if (!ok) toast("This browser won't save your progress. Export it before you close this page.", 6000);
+  }
+
+  // -------------------------------------------------------------------------
+  // Rendering and routing
+  // -------------------------------------------------------------------------
+
+  function mount(node, focus) {
+    $app.replaceChildren(node);
+    window.scrollTo(0, 0);
+    const target = (focus && $app.querySelector(focus)) || $app.querySelector("h1");
+    if (target) {
+      if (!target.matches("button, a, input, textarea")) target.setAttribute("tabindex", "-1");
+      target.focus({ preventScroll: true });
+    }
+  }
+
+  async function route() {
+    const token = ++app.routeToken;
+    const parts = location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(decodeURIComponent);
+    app.keys = {};
+    try {
+      await loadManifest();
+      if (token !== app.routeToken) return;
+      if (parts[0] === "d" && parts[1]) {
+        await ensureDeck(parts[1]);
+        if (token !== app.routeToken) return;
+        if (parts[2] === "study") startSession(parts[1]);
+        else { app.session = null; viewDeck(parts[1]); }
+      } else {
+        const entries = deckEntries();
+        if (app.firstRoute && entries.length === 1) {
+          app.firstRoute = false;
+          location.replace("#/d/" + encodeURIComponent(entries[0].id));
+          return;
+        }
+        app.session = null;
+        await viewHome(entries, token);
+      }
+      app.firstRoute = false;
+    } catch (e) {
+      if (token === app.routeToken) viewError(e);
+    }
+  }
+
+  function setKeys(map) { app.keys = map; }
+
+  document.addEventListener("keydown", (e) => {
+    if (e.repeat || e.metaKey || e.ctrlKey || e.altKey) return;
+    const t = e.target;
+    if (t && t.matches && t.matches("input:not([type=checkbox]), textarea, select")) return;
+    const fn = app.keys[e.key.toLowerCase()];
+    if (fn) {
+      e.preventDefault();
+      fn();
+    }
+  });
+
+  window.addEventListener("hashchange", route);
+
+  // Back from a chat session? Show what changed there. Never interrupts a study session.
+  document.addEventListener("visibilitychange", async () => {
+    if (document.hidden || app.session) return;
+    const y = window.scrollY;
+    await route();
+    window.scrollTo(0, y);
+  });
+
+  const backLink = (href, label) => h("a", { class: "crumb", href }, "← " + label);
+
+  // -------------------------------------------------------------------------
+  // Home
+  // -------------------------------------------------------------------------
+
+  function deckFilePicker(label) {
+    return h("label", { class: "btn quiet file-btn" }, label,
+      h("input", {
+        type: "file", accept: ".json,application/json",
+        onchange: async (e) => {
+          const file = e.target.files[0];
+          e.target.value = "";
+          if (!file) return;
+          try {
+            const raw = JSON.parse(await file.text());
+            const deck = prepareDeck(raw);
+            store.set(deckKey(deck.id), JSON.stringify(raw));
+            store.set("il:custom", JSON.stringify([...new Set([deck.id, ...customIds()])]));
+            app.decks.delete(deck.id);
+            app.progress.delete(deck.id);
+            const target = "#/d/" + encodeURIComponent(deck.id);
+            if (location.hash === target) route();
+            else location.hash = target;
+          } catch (err) {
+            toast(err instanceof SyntaxError ? "That file isn't valid JSON." : err.message, 5000);
+          }
+        },
+      }));
+  }
+
+  function loadTrouble() {
+    if (!app.manifestError) return null;
+    const isFile = location.protocol === "file:";
+    return h("section", { class: "panel" },
+      h("h2", {}, isFile ? "Decks can't load from a file:// page" : "Couldn't load the deck list"),
+      h("p", {}, isFile
+        ? "Browsers block that. Run this in the repo folder, then open http://localhost:8000/app/"
+        : "projects/manifest.json didn't load. From the repo folder, run:"),
+      h("pre", { class: "cmd" }, "python3 -m http.server 8000"),
+      h("p", { class: "muted small" }, "Or open a deck.json file directly:"),
+      deckFilePicker("Open a deck file"));
+  }
+
+  async function viewHome(entries, token) {
+    await Promise.allSettled(entries.map((d) => ensureDeck(d.id)));
+    if (token !== app.routeToken) return;
+    document.title = "Interactive Learning";
+    const day = today();
+    mount(h("div", {},
+      h("h1", { class: "title" }, "Interactive Learning"),
+      h("p", { class: "lede" }, "Pull ideas out of your head, a little every day, in your own words."),
+      loadTrouble(),
+      entries.map((d) => {
+        let status = "";
+        if (app.decks.has(d.id)) {
+          const p = prog(d.id);
+          const items = queueItems(app.decks.get(d.id), p.log, p.settings, day);
+          const nDue = items.filter((i) => i.kind === "review").length;
+          status = todayCounts(p, items, day)
+            ? "✓ Today counts"
+            : `${nDue} due · ${items.length - nDue} new`;
+        }
+        return h("a", { class: "deck-row", href: "#/d/" + encodeURIComponent(d.id) },
+          h("strong", {}, d.title),
+          d.subtitle && h("span", { class: "muted small" }, d.subtitle),
+          h("div", { class: "small", style: "margin-top:.35rem" }, status));
+      }),
+      !entries.length && !app.manifestError && h("p", { class: "muted" }, "No decks yet. Create one with: python3 tools/il.py new my-topic --title \"My topic\""),
+      !app.manifestError && h("div", { class: "row", style: "margin-top:1rem" }, deckFilePicker("Open a deck file")),
+      h("p", { class: "foot" }, h("a", { href: PRINCIPLES_URL, target: "_blank", rel: "noopener noreferrer" }, "Why it works this way"))));
+  }
+
+  // Reaching the minimum counts, and so does doing everything there was to do.
+  function todayCounts(p, items, day) {
+    const answered = answeredOn(p.log, day);
+    return answered >= p.settings.minimum || (answered > 0 && !items.length);
+  }
+
+  function viewError(e) {
+    document.title = "Interactive Learning";
+    mount(h("div", {},
+      backLink("#/", "All decks"),
+      h("h1", { class: "title" }, "That didn't load"),
+      h("p", {}, e.message || String(e))));
+  }
+
+  // -------------------------------------------------------------------------
+  // Deck page
+  // -------------------------------------------------------------------------
+
+  // Re-render after a small change without losing your place on the page.
+  function refreshDeck(id, focus) {
+    const y = window.scrollY;
+    viewDeck(id, focus);
+    window.scrollTo(0, y);
+  }
+
+  function viewDeck(id, focus) {
+    const deck = app.decks.get(id);
+    const p = prog(id);
+    const day = today();
+    const cards = replay(p.log);
+    document.title = `${deck.title} · Interactive Learning`;
+    mount(h("div", {},
+      backLink("#/", "All decks"),
+      h("h1", { class: "title" }, deck.title),
+      deck.subtitle && h("p", { class: "lede" }, deck.subtitle),
+      deck.skipped > 0 && h("p", { class: "banner partly" },
+        `${countOf(deck.skipped, "card")} couldn't be used. Run: python3 tools/il.py validate ${id}`),
+      todayPanel(deck, p, day),
+      showUpPanel(p, day),
+      conceptsPanel(deck, p, cards),
+      calibrationPanel(deck, p),
+      gapsPanel(id, p),
+      settingsPanel(deck, p),
+      h("p", { class: "foot" }, h("a", { href: PRINCIPLES_URL, target: "_blank", rel: "noopener noreferrer" }, "Why it works this way"))), focus);
+  }
+
+  function todayPanel(deck, p, day) {
+    const id = deck.id;
+    const items = queueItems(deck, p.log, p.settings, day);
+    const nDue = items.filter((i) => i.kind === "review").length;
+    const nNew = items.length - nDue;
+    const answered = answeredOn(p.log, day);
+    const min = p.settings.minimum;
+    const met = todayCounts(p, items, day);
+    const suggested = deck.habit && deck.habit.suggested_anchor;
+
+    let action;
+    if (!deck.questions.length) {
+      action = h("p", { class: "muted" }, "This deck has no cards yet. See prompts/build.md.");
+    } else if (!items.length) {
+      action = h("div", {},
+        met && h("p", { class: "today-status" }, h("span", { class: "pill" }, "✓ Today counts")),
+        h("p", { class: "muted" }, met
+          ? "Nothing else is due. See you next time."
+          : "Nothing is due today. The gap is part of how this works, so come back tomorrow."));
+    } else if (met) {
+      action = h("div", {},
+        h("p", { class: "today-status" }, h("span", { class: "pill" }, "✓ Today counts")),
+        h("a", { class: "btn wide", href: `#/d/${encodeURIComponent(id)}/study` }, `Bonus reps (${items.length} available)`));
+    } else {
+      action = h("div", {},
+        h("a", { class: "btn primary wide", href: `#/d/${encodeURIComponent(id)}/study` }, `Answer ${cardsWord(Math.min(min - answered, items.length))}`),
+        h("p", { class: "muted small", style: "margin-top:.5rem;text-align:center" }, `${nDue} due · ${nNew} new`));
+    }
+
+    return h("section", { class: "panel" },
+      h("label", { class: "recipe-label", for: "anchor" }, "After I…"),
+      h("input", {
+        id: "anchor", type: "text", value: p.settings.anchor || "",
+        placeholder: suggested || "something you already do every day",
+        onchange: (e) => {
+          const mine = prog(id);
+          mine.settings.anchor = e.target.value.trim();
+          mine.settings_at = now();
+          persist(id);
+          announce("Saved");
+        },
+      }),
+      h("p", { class: "recipe-rest" }, h("strong", {}, `I will answer ${cardsWord(min)}.`), " Then I'll celebrate."),
+      action);
+  }
+
+  function showUpPanel(p, day) {
+    const days = new Set(p.log.map((e) => e.at.slice(0, 10)));
+    const cells = [];
+    let recent = 0;
+    for (let i = 27; i >= 0; i--) {
+      const d = addDays(day, -i);
+      const on = days.has(d);
+      if (on) recent += 1;
+      cells.push(h("div", {
+        class: "day" + (on ? " on" : "") + (i === 0 ? " today" : ""),
+        title: `${prettyDay(d)}: ${on ? "showed up" : "no answers"}`,
+      }));
+    }
+    return h("section", { class: "panel" },
+      h("h2", {}, "Show-up days"),
+      h("div", { class: "days", role: "img", "aria-label": `You showed up on ${recent} of the last 28 days.` }, cells),
+      h("p", { class: "small" }, `${recent} of the last 28 days · ${days.size} in total`),
+      h("p", { class: "small muted" }, "No streak to protect. Missed days carry no penalty and need no make-up."));
+  }
+
+  function conceptDetails(c) {
+    const url = safeUrl(c.read_url);
+    return h("div", { class: "small" },
+      h("div", { html: blocks(c.summary || "") }),
+      c.read && h("p", { style: "margin-top:.5rem" }, "Read: ", url
+        ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, c.read)
+        : c.read));
+  }
+
+  function conceptsPanel(deck, p, cards) {
+    if (!deck.concepts.length) return null;
+    const m = mastery(deck, cards);
+    const started = deck.questions.filter((q) => cards[q.id]).length;
+    return h("section", { class: "panel" },
+      h("h2", {}, "Concepts"),
+      h("p", { class: "small muted" }, `${started} of ${countOf(deck.questions.length, "card")} started. A concept fills up as its cards reach box 4 (a two-week gap).`),
+      deck.concepts.map((c) => {
+        const v = m[c.id] || 0;
+        const pct = Math.round(v * 100);
+        const seen = deck.questions.some((q) => q.concept === c.id && q.purpose !== "pretest" && cards[q.id]);
+        const head = h("div", { class: "concept-head" },
+          h("span", {}, seen && h("span", { class: "chev", "aria-hidden": "true" }, "▸"), c.title),
+          h("span", { class: "pct" }, `${pct}%`));
+        const meter = h("div", {
+          class: "meter", role: "img", "aria-label": `${c.title}: ${pct}%`,
+          title: `${c.title}: ${pct}%`,
+        }, h("span", { style: `width:${pct}%` }));
+        // Unseen concepts stay closed, so their summaries can't spoil the pretest.
+        return h("div", { class: "concept" }, seen
+          ? h("details", {}, h("summary", {}, head, meter), conceptDetails(c))
+          : [head, meter]);
+      }));
+  }
+
+  function calibrationPanel(deck, p) {
+    const cal = calibration(deck, p.log);
+    const known = CONF.filter((c) => cal[c.id][0] >= 3);
+    return h("section", { class: "panel" },
+      h("h2", {}, "How sure vs. how right"),
+      !known.length && h("p", { class: "small muted" }, "After a few answers, this shows how often you're right when you say Guessing, I think so and I know it."),
+      known.map((c) => {
+        const [n, s] = cal[c.id];
+        const pct = Math.round(s * 100);
+        return h("div", { class: "cal-row", title: `${c.label}: right ${pct}% of the time (${countOf(n, "answer")})` },
+          h("div", { class: "concept-head" }, h("span", {}, c.label), h("span", { class: "num" }, `${pct}% · ${countOf(n, "answer")}`)),
+          h("div", { class: "meter", role: "img", "aria-label": `${c.label}: right ${pct}% of the time` }, h("span", { style: `width:${pct}%` })));
+      }),
+      cal.know[0] >= 3 && h("p", { class: "small muted", style: "margin-top:.5rem" },
+        `When you say "I know it", you're right ${Math.round(cal.know[1] * 100)}% of the time.`));
+  }
+
+  function gapsPanel(id, p) {
+    const open = p.gaps.filter((g) => !g.closed);
+    if (!open.length) return null;
+    return h("section", { class: "panel" },
+      h("h2", {}, `Gaps (${open.length})`),
+      h("p", { class: "small muted" }, "Things that confused you. Each one can become a new card: export your progress and ask your tutor, or add it to deck.json yourself."),
+      open.map((g) => h("div", { class: "gap-item small" },
+        h("span", {}, g.text),
+        h("button", {
+          class: "linkish", style: "flex:none;min-height:0",
+          onclick: () => {
+            const mine = prog(id).gaps.find((x) => x.at === g.at && x.text === g.text);
+            if (mine) mine.closed = true;
+            persist(id);
+            refreshDeck(id, ".panel h2");
+          },
+        }, "Done"))));
+  }
+
+  function settingsPanel(deck, p) {
+    const id = deck.id;
+    const numberField = (label, key, lowest, note) => h("label", { class: "field" },
+      h("span", {}, label),
+      h("input", {
+        type: "number", min: lowest, max: 200, step: 1, value: p.settings[key], "data-setting": key,
+        onchange: (e) => {
+          const n = Math.max(lowest, Math.min(200, Math.trunc(Number(e.target.value)) || lowest));
+          const mine = prog(id);
+          mine.settings[key] = n;
+          mine.settings_at = now();
+          persist(id);
+          refreshDeck(id, `[data-setting="${key}"]`);
+        },
+      }),
+      note && h("div", { class: "small muted", style: "margin-top:.25rem" }, note));
+
+    return h("details", { class: "panel", open: app.settingsOpen, ontoggle: (e) => { app.settingsOpen = e.target.open; } },
+      h("summary", {}, "Settings and your data"),
+      numberField("Daily minimum", "minimum", 1, "Keep it tiny. When it starts to feel easy, don't raise it: use the extra energy for bonus reps."),
+      numberField("New cards per day", "new_per_day", 0, null),
+      h("p", { class: "small", style: "margin-top:1rem" }, "Your progress lives in this browser. Export it to keep a copy, or to merge it into the repo:"),
+      h("pre", { class: "cmd" }, `python3 tools/il.py import ${id} progress-${id}.json`),
+      h("div", { class: "row" },
+        h("button", {
+          class: "btn quiet",
+          onclick: () => {
+            download(`progress-${id}.json`, formatProgress(prog(id)));
+            toast("Exported.");
+          },
+        }, "Export progress"),
+        h("label", { class: "btn quiet file-btn" }, "Import progress",
+          h("input", {
+            type: "file", accept: ".json,application/json",
+            onchange: async (e) => {
+              const file = e.target.files[0];
+              e.target.value = "";
+              if (file) await importProgress(id, file);
+            },
+          })),
+        h("button", {
+          class: "btn quiet",
+          onclick: () => {
+            if (!confirm(`Delete this browser's progress for "${deck.title}"? This can't be undone. Export first if you want a copy.`)) return;
+            store.remove(progressKey(id));
+            app.decks.delete(id);
+            app.progress.delete(id);
+            route();
+          },
+        }, "Reset"),
+        customIds().includes(id) && h("button", {
+          class: "btn quiet",
+          onclick: () => {
+            store.remove(deckKey(id));
+            store.set("il:custom", JSON.stringify(customIds().filter((x) => x !== id)));
+            app.decks.delete(id);
+            app.progress.delete(id);
+            location.hash = "#/";
+            toast("Forgot the deck file. Your progress is still saved in this browser.");
+          },
+        }, "Forget this deck file")));
+  }
+
+  async function importProgress(id, file) {
+    let raw;
+    try {
+      raw = JSON.parse(await file.text());
+    } catch (_) {
+      toast("That file isn't valid JSON.", 5000);
+      return;
+    }
+    if (!raw || !Array.isArray(raw.log)) {
+      toast("That file doesn't look like a progress export.", 5000);
+      return;
+    }
+    const incoming = normalizeProgress(raw, id);
+    if (incoming.deck !== id) {
+      toast(`That file is progress for "${incoming.deck}", not "${id}".`, 5000);
+      return;
+    }
+    const before = prog(id).log.length;
+    app.progress.set(id, mergeProgress(prog(id), incoming));
+    persist(id);
+    refreshDeck(id, ".file-btn input");
+    const skipped = raw.log.length - incoming.log.length;
+    toast(`Merged ${countOf(prog(id).log.length - before, "new answer")}.${skipped ? ` Skipped ${countOf(skipped, "malformed row")}.` : ""}`);
+  }
+
+  // -------------------------------------------------------------------------
+  // Study session
+  // -------------------------------------------------------------------------
+
+  function startSession(id) {
+    const deck = app.decks.get(id);
+    const p = prog(id);
+    const byId = new Map(deck.questions.map((q) => [q.id, q]));
+    app.session = {
+      id,
+      queue: queueItems(deck, p.log, p.settings, today()).map((it) => ({ ...it, retries: 0, card: byId.get(it.q) })),
+      cur: null,
+      view: "card",
+      stats: { good: 0, partly: 0, again: 0, guess: 0 },
+      answered: 0,
+      pendingCelebrate: false,
+      celebrated: false,
+    };
+    document.title = `${deck.title} · Interactive Learning`;
+    advance();
+  }
+
+  function advance() {
+    const s = app.session;
+    s.cur = null;
+    const ranOutEarly = !s.queue.length && s.answered > 0 && !s.celebrated
+      && answeredOn(prog(s.id).log, today()) < prog(s.id).settings.minimum;
+    if (s.pendingCelebrate || ranOutEarly) {
+      s.pendingCelebrate = false;
+      s.celebrated = true;
+      s.view = "celebrate";
+    } else if (!s.queue.length) {
+      s.view = "done";
+    } else {
+      const item = s.queue.shift();
+      const seen = replay(prog(s.id).log);
+      s.cur = {
+        item,
+        card: item.card,
+        phase: "answer",
+        isGuess: item.card.purpose === "pretest" && !seen[item.card.id],
+        pick: null,
+        conf: null,
+        text: "",
+        ticks: new Set(),
+        order: item.card.type === "mcq" ? shuffled(item.card.options) : null,
+        entry: null,
+        message: null,
+      };
+      s.view = item.intro ? "intro" : "card";
+    }
+    renderStudy();
+  }
+
+  function renderStudy(focus) {
+    const s = app.session;
+    setKeys({});
+    if (s.view === "intro") viewIntro(s);
+    else if (s.view === "celebrate") viewCelebrate(s);
+    else if (s.view === "done") viewDone(s);
+    else viewCard(s, focus);
+  }
+
+  const stopSession = (s) => { location.hash = "#/d/" + encodeURIComponent(s.id); };
+
+  function studyBar(s) {
+    const p = prog(s.id);
+    const n = answeredOn(p.log, today());
+    const min = p.settings.minimum;
+    const left = s.queue.length + (s.cur && !s.cur.entry ? 1 : 0);
+    const todayText = n < min ? `Today: ${n} of ${min}` : n === min ? "Today counts ✓" : countOf(n - min, "bonus rep");
+    return h("div", { class: "study-bar" },
+      h("a", { class: "crumb", href: "#/d/" + encodeURIComponent(s.id) }, "× Stop"),
+      h("span", {}, left ? `${todayText} · ${left} left` : todayText));
+  }
+
+  function conceptOf(deck, id) {
+    return deck.concepts.find((c) => c.id === id) || { id, title: id };
+  }
+
+  function eyebrow(deck, cur) {
+    const c = cur.card;
+    const titles = [conceptOf(deck, c.concept).title];
+    if (c.purpose === "compare") for (const a of c.also || []) titles.push(conceptOf(deck, a).title);
+    const label = cur.isGuess ? PURPOSE.pretest : c.purpose === "pretest" ? "Review" : PURPOSE[c.purpose];
+    return h("p", { class: "eyebrow" }, h("span", { class: "tag" }, label), " · ", titles.join(c.purpose === "compare" ? " vs. " : ", "));
+  }
+
+  function viewIntro(s) {
+    const deck = app.decks.get(s.id);
+    const c = conceptOf(deck, s.cur.card.concept);
+    const url = safeUrl(c.read_url);
+    const go = () => {
+      s.view = "card";
+      renderStudy();
+    };
+    mount(h("div", {},
+      studyBar(s),
+      h("p", { class: "eyebrow" }, h("span", { class: "tag" }, "New concept")),
+      h("h1", { class: "prompt" }, c.title),
+      h("div", { class: "block answer", html: blocks(c.summary || "") }),
+      c.analogy && h("div", { class: "note" }, h("div", { class: "note-label" }, "Think of it like this"), h("div", { html: inline(c.analogy) })),
+      c.example && h("div", { class: "note" }, h("div", { class: "note-label" }, "For example"), h("div", { html: inline(c.example) })),
+      c.read && h("p", { class: "ref" }, "Read more: ", url
+        ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, c.read)
+        : c.read),
+      h("button", { class: "btn primary wide", "data-primary": true, onclick: go }, "Got it. Quiz me")), "[data-primary]");
+  }
+
+  function confidenceGroup(s, enabled, whenDisabled) {
+    const keys = { ...app.keys };
+    const row = CONF.map((c) => {
+      if (enabled) keys[c.key] = () => reveal(s, c.id);
+      return h("button", {
+        class: "btn", disabled: !enabled, "data-conf": c.id,
+        onclick: () => reveal(s, c.id),
+      }, c.label, enabled && h("kbd", {}, c.key));
+    });
+    setKeys(keys);
+    return h("div", { class: "commit", role: "group", "aria-label": "How sure are you?" },
+      h("p", { class: "commit-label" }, "How sure are you? ",
+        h("span", { class: "muted small" }, enabled ? "Choosing shows the answer." : whenDisabled)),
+      h("div", { class: "triple" }, row));
+  }
+
+  function viewCard(s, focus) {
+    const deck = app.decks.get(s.id);
+    const cur = s.cur;
+    const c = cur.card;
+    const body = cur.phase === "answer"
+      ? (c.type === "mcq" ? mcqAnswer(s, cur) : c.type === "short" ? shortAnswer(s, cur) : feynmanAnswer(s, deck, cur))
+      : (c.type === "mcq" ? mcqResult(s, deck, cur) : c.type === "short" ? shortResult(s, deck, cur) : feynmanResult(s, deck, cur));
+    mount(h("div", {},
+      studyBar(s),
+      eyebrow(deck, cur),
+      h("h1", { class: "prompt", html: inline(c.prompt) }),
+      body), focus || (cur.phase === "answer" ? "h1" : "[data-primary]"));
+  }
+
+  const guessHint = () => h("p", { class: "hint" }, "You haven't studied this yet, so just guess. A wrong guess helps you learn it, and it doesn't count against you.");
+
+  function mcqAnswer(s, cur) {
+    const keys = {};
+    const options = cur.order.map((o, i) => {
+      const choose = () => {
+        cur.pick = o;
+        if (cur.isGuess) reveal(s, "guess");
+        else renderStudy('[data-conf="think"]');
+      };
+      keys[String(i + 1)] = choose;
+      return h("button", { class: "option", "aria-pressed": String(cur.pick === o), onclick: choose },
+        h("kbd", {}, i + 1), h("span", { html: inline(o.text) }));
+    });
+    setKeys(keys);
+    return h("div", {},
+      cur.isGuess && guessHint(),
+      h("div", { class: "options" }, options),
+      !cur.isGuess && confidenceGroup(s, !!cur.pick, "Pick an answer first."));
+  }
+
+  function shortAnswer(s, cur) {
+    const box = h("textarea", {
+      "aria-label": "Your answer",
+      placeholder: "Type it, or say it out loud.",
+      value: cur.text,
+      oninput: (e) => { cur.text = e.target.value; },
+    });
+    return h("div", {},
+      cur.isGuess && guessHint(),
+      h("div", { class: "block" }, box),
+      cur.isGuess
+        ? h("button", { class: "btn primary wide", onclick: () => reveal(s, "guess") }, "Show the answer")
+        : confidenceGroup(s, true));
+  }
+
+  function feynmanJargon(deck, c) {
+    const terms = [c.concept, ...(c.also || [])].flatMap((id) => conceptOf(deck, id).jargon || []);
+    return [...new Set(terms)];
+  }
+
+  function jargonHits(text, terms) {
+    return terms.filter((term) => {
+      const pat = term.trim().split(/\s+/).map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+");
+      return new RegExp(`(?<![\\p{L}\\p{N}])${pat}(?:s|es)?(?![\\p{L}\\p{N}])`, "iu").test(text);
+    });
+  }
+
+  function feynmanAnswer(s, deck, cur) {
+    const c = cur.card;
+    const terms = feynmanJargon(deck, c);
+    const count = h("span", {});
+    const limitNote = h("span", {});
+    const spotted = h("p", { class: "spotted", hidden: true, role: "status" });
+    const chips = terms.map((t) => h("span", { class: "chip", "data-term": t }, t));
+    const refresh = () => {
+      const n = countWords(cur.text);
+      count.textContent = c.word_limit ? `${n} / ${c.word_limit} words` : countOf(n, "word");
+      count.className = c.word_limit && n > c.word_limit ? "over" : "";
+      limitNote.textContent = c.word_limit && n > c.word_limit ? "Over the limit: simpler is better." : "";
+      const hits = jargonHits(cur.text, terms);
+      for (const el of chips) el.classList.toggle("hit", hits.includes(el.dataset.term));
+      spotted.hidden = !hits.length;
+      spotted.textContent = hits.length ? `Jargon spotted: ${hits.join(", ")}. Can you say it more simply?` : "";
+    };
+    const box = h("textarea", {
+      class: "tall",
+      "aria-label": "Your explanation",
+      placeholder: "No notes. Plain words. Write it the way you'd say it.",
+      value: cur.text,
+      oninput: (e) => {
+        cur.text = e.target.value;
+        refresh();
+      },
+    });
+    refresh();
+    return h("div", {},
+      h("div", { class: "chips" },
+        c.audience && h("span", {}, h("strong", {}, "For: "), c.audience),
+        c.word_limit && h("span", {}, h("strong", {}, "Limit: "), `${c.word_limit} words`)),
+      terms.length > 0 && h("div", { class: "chips" }, h("strong", {}, "Avoid:"), chips),
+      box,
+      h("div", { class: "counter" }, count, limitNote),
+      spotted,
+      confidenceGroup(s, true));
+  }
+
+  // The commit point. Nothing about the answer is on screen before this runs.
+  function reveal(s, conf) {
+    const cur = s.cur;
+    cur.conf = conf;
+    cur.phase = "revealed";
+    if (cur.card.type === "mcq") {
+      record(s, cur, cur.pick.correct === true ? "good" : "again", conf, null);
+      announce(cur.message.text);
+    } else {
+      saveDraft(s, cur);
+    }
+    renderStudy();
+  }
+
+  // The answer is on screen now, so it goes on the record even if they leave before grading
+  // themselves: it counts as missed until they do. record() overwrites this entry in place.
+  function saveDraft(s, cur) {
+    const p = prog(s.id);
+    if (!cur.draft) {
+      cur.seen = replay(p.log);
+      cur.answeredBefore = answeredOn(p.log, today());
+      cur.draft = makeEntry(cur.card, cur.seen, "again", cur.conf, null, "app");
+      p.log.push(cur.draft);
+    }
+    saveTeachback(p, cur, cur.draft);
+    persist(s.id);
+  }
+
+  // Their words are theirs, so keep them from the moment they commit.
+  function saveTeachback(p, cur, entry) {
+    const c = cur.card;
+    if (c.type !== "feynman" || !cur.text.trim()) return;
+    const list = p.feynman[c.concept] || (p.feynman[c.concept] = []);
+    const saved = makeTeachback(c, cur.text, entry);
+    const i = list.findIndex((e) => e.at === entry.at);
+    if (i >= 0) list[i] = saved;
+    else list.push(saved);
+  }
+
+  function record(s, cur, grade, conf, score) {
+    const p = prog(s.id);
+    const draft = cur.draft ? p.log.find((e) => e.at === cur.draft.at && e.q === cur.draft.q) : null;
+    const before = draft ? cur.answeredBefore : answeredOn(p.log, today());
+    const seen = draft ? cur.seen : replay(p.log);
+    const entry = makeEntry(cur.card, seen, grade, conf, score, "app", draft ? draft.at : null);
+    if (draft) p.log[p.log.indexOf(draft)] = entry;
+    else p.log.push(entry);
+    cur.entry = entry;
+    saveTeachback(p, cur, entry);
+    s.answered += 1;
+    if (entry.pretest) s.stats.guess += 1;
+    else s.stats[entry.grade] += 1;
+    if (before < p.settings.minimum && before + 1 >= p.settings.minimum) s.pendingCelebrate = true;
+    const comesBack = entry.grade === "again" && !entry.pretest && cur.item.retries < MAX_RETRIES;
+    if (comesBack) {
+      s.queue.splice(Math.min(3, s.queue.length), 0, { ...cur.item, kind: "retry", intro: false, retries: cur.item.retries + 1 });
+    }
+    const after = replay(p.log)[cur.card.id];
+    cur.message = feedback(entry, grade, seen[cur.card.id], after, comesBack);
+    persist(s.id);
+    return entry;
+  }
+
+  function feedback(entry, rawGrade, before, after, comesBack) {
+    const when = WHEN[INTERVALS[after.box]];
+    const lines = [];
+    let tone = entry.grade;
+    if (entry.pretest) {
+      tone = "guess";
+      lines.push(rawGrade === "good" ? "Good guess." : "Not this time, and that's fine. Guessing first helps the answer stick.");
+      lines.push(`It starts in box 1 and comes back ${when}.`);
+      return { tone, text: lines.join(" ") };
+    }
+    if (entry.grade === "again") {
+      if (entry.conf === "know") lines.push("You were sure about this one. That surprise helps: confident mistakes are the ones people fix best.");
+      else lines.push("Not this time.");
+      lines.push(comesBack ? "Back to box 1. It comes back later this session, and again tomorrow." : "Back to box 1. It comes back tomorrow.");
+      return { tone, text: lines.join(" ") };
+    }
+    if (rawGrade === "good" && entry.grade === "partly") lines.push("Right, but it was a guess, so it counts as partly.");
+    else if (entry.grade === "partly") lines.push("Partly.");
+    else lines.push("Right.");
+    const beforeBox = before ? before.box : 0;
+    if (after.box > beforeBox) lines.push(`Up to box ${after.box}. Next review ${when}.`);
+    else if (entry.grade === "good") lines.push(`A card moves up only once a day, so it stays in box ${after.box}. Next review ${when}.`);
+    else lines.push(`It stays in box ${after.box}. Next review ${when}.`);
+    return { tone, text: lines.join(" ") };
+  }
+
+  const TONE_ICON = { good: "✓", partly: "~", again: "✗", guess: "?" };
+  const banner = (msg) => h("div", { class: `banner ${msg.tone}` },
+    h("span", { class: "ico", "aria-hidden": "true" }, TONE_ICON[msg.tone]), h("div", {}, msg.text));
+
+  function refLine(deck, c) {
+    const concept = conceptOf(deck, c.concept);
+    const url = safeUrl(concept.read_url);
+    if (!c.ref && !url) return null;
+    return h("p", { class: "ref" }, "Source: ", url
+      ? h("a", { href: url, target: "_blank", rel: "noopener noreferrer" }, c.ref || concept.read || "read more")
+      : c.ref);
+  }
+
+  function gapNote(s, c) {
+    const box = h("textarea", { "aria-label": "What confused you?", placeholder: "What didn't make sense?" });
+    const panel = h("details", { class: "gap" },
+      h("summary", {}, "Confused? Note a gap"),
+      box,
+      h("button", {
+        class: "btn quiet",
+        onclick: () => {
+          const text = box.value.trim();
+          if (!text) { box.focus(); return; }
+          prog(s.id).gaps.push({ at: now(), q: c.id, text });
+          persist(s.id);
+          box.value = "";
+          panel.open = false;
+          toast("Noted. Gaps can become new cards.");
+        },
+      }, "Save the gap"));
+    return panel;
+  }
+
+  const nextButton = (s) => h("button", {
+    class: "btn primary wide", "data-primary": true, onclick: advance,
+  }, s.queue.length || s.pendingCelebrate ? "Next" : "Finish");
+
+  function mcqResult(s, deck, cur) {
+    const c = cur.card;
+    const rows = cur.order.map((o) => {
+      const correct = o.correct === true;
+      const chosen = o === cur.pick;
+      return h("div", { class: "res" + (correct ? " correct" : chosen ? " chosen" : "") },
+        h("div", { class: "res-head" },
+          h("span", { class: "res-ico", "aria-hidden": "true" }, correct ? "✓" : chosen ? "✗" : ""),
+          h("span", {},
+            h("span", { html: inline(o.text) }),
+            (correct || chosen) && h("span", { class: "res-tag" }, " ",
+              correct && chosen ? "Your answer, correct" : correct ? "Correct" : "Your answer"))),
+        o.why && h("p", { class: "res-why", html: inline(o.why) }));
+    });
+    return h("div", {},
+      banner(cur.message),
+      h("div", { class: "result" }, rows),
+      c.explanation && h("div", { class: "block", html: blocks(c.explanation) }),
+      refLine(deck, c),
+      nextButton(s),
+      gapNote(s, c));
+  }
+
+  function selfCheck(points, label, cur, onChange) {
+    return h("div", { class: "block" },
+      h("div", { class: "block-label" }, label),
+      h("ul", { class: "checks" }, points.map((pt, i) => h("li", {}, h("label", {},
+        h("input", {
+          type: "checkbox", checked: cur.ticks.has(i),
+          onchange: (e) => {
+            if (e.target.checked) cur.ticks.add(i); else cur.ticks.delete(i);
+            onChange();
+          },
+        }),
+        h("span", { html: inline(pt) }))))));
+  }
+
+  // Grading yourself: ticks suggest a grade, and you make the call.
+  function gradeRow(s, cur, total, finish) {
+    const options = [
+      { id: "again", label: "Missed", ico: "✗", key: "1" },
+      { id: "partly", label: "Partly", ico: "~", key: "2" },
+      { id: "good", label: "Got it", ico: "✓", key: "3" },
+    ];
+    const keys = {};
+    const buttons = {};
+    const row = h("div", { class: "triple" }, options.map((o) => {
+      keys[o.key] = () => finish(o.id);
+      const hint = h("span", { class: "sugg", hidden: true }, "suggested");
+      const btn = h("button", { class: "btn grade", "data-grade": o.id, onclick: () => finish(o.id) },
+        h("span", {}, h("span", { class: `ico-${o.id}`, "aria-hidden": "true" }, o.ico), " ", o.label, " ", h("kbd", {}, o.key)), hint);
+      buttons[o.id] = { btn, hint };
+      return btn;
+    }));
+    setKeys({ ...app.keys, ...keys });
+    const update = () => {
+      const n = cur.ticks.size;
+      const sugg = total && n ? (n >= total ? "good" : "partly") : null;
+      for (const [id, { btn, hint }] of Object.entries(buttons)) {
+        btn.classList.toggle("sugg-on", id === sugg);
+        hint.hidden = id !== sugg;
+      }
+    };
+    update();
+    return { row, update };
+  }
+
+  function finishSelfGrade(s, cur, grade) {
+    const c = cur.card;
+    const total = (c.type === "feynman" ? c.rubric : c.key_points || []).length;
+    record(s, cur, grade, cur.conf, total ? cur.ticks.size / total : null);
+    toast(cur.message.text, 4200);
+    advance();
+  }
+
+  function shortResult(s, deck, cur) {
+    const c = cur.card;
+    const points = c.key_points || [];
+    const grade = gradeRow(s, cur, points.length, (g) => finishSelfGrade(s, cur, g));
+    return h("div", {},
+      cur.text.trim() && h("div", { class: "block" }, h("div", { class: "block-label" }, "You wrote"), h("div", { class: "yours" }, cur.text.trim())),
+      h("div", { class: "block" }, h("div", { class: "block-label" }, "Answer"), h("div", { class: "answer", html: blocks(c.answer) })),
+      c.explanation && h("div", { class: "block", html: blocks(c.explanation) }),
+      points.length > 0 && selfCheck(points, "Tick the ideas you had", cur, grade.update),
+      h("div", { class: "block" },
+        h("div", { class: "block-label", id: "grade-label" }, "How did you do?"),
+        cur.conf === "guess" && h("p", { class: "small muted" }, "You said you were guessing, so a correct answer counts as partly."),
+        grade.row),
+      refLine(deck, c),
+      gapNote(s, c));
+  }
+
+  function tutorMessage(deck, c, text) {
+    return `Check my explanation. Coach me with questions; don't rewrite it.\n\n`
+      + `Deck: ${deck.id}\nCard: ${c.id}\nPrompt: ${c.prompt}\n\nMy explanation:\n${text.trim()}\n`;
+  }
+
+  function feynmanResult(s, deck, cur) {
+    const c = cur.card;
+    const grade = gradeRow(s, cur, c.rubric.length, (g) => finishSelfGrade(s, cur, g));
+    const earlier = (prog(s.id).feynman[c.concept] || []).filter((e) => e.q === c.id && e.at !== cur.draft.at);
+    const last = earlier[earlier.length - 1];
+    const n = countWords(cur.text);
+    return h("div", {},
+      cur.text.trim() && h("div", { class: "block" },
+        h("div", { class: "block-label" }, `You wrote (${countOf(n, "word")})`),
+        h("div", { class: "yours" }, cur.text.trim())),
+      last && h("details", { class: "gap" },
+        h("summary", {}, `Your explanation from ${prettyDay(last.at.slice(0, 10))}`),
+        h("div", { class: "yours" }, last.text)),
+      selfCheck(c.rubric, "Does it do these things?", cur, grade.update),
+      (c.follow_ups || []).length > 0 && h("div", { class: "block" },
+        h("div", { class: "block-label" }, "Now they ask you…"),
+        h("ul", { class: "follow" }, c.follow_ups.map((f) => h("li", { html: inline(f) }))),
+        h("p", { class: "small muted", style: "margin-top:.4rem" }, "Stuck on one? That's a gap. Go back to the source, fill it, and explain again.")),
+      h("div", { class: "block" },
+        h("div", { class: "block-label" }, "How did you do?"),
+        cur.conf === "guess" && h("p", { class: "small muted" }, "You said you were guessing, so a correct answer counts as partly."),
+        grade.row),
+      h("div", { class: "row", style: "margin-bottom:.75rem" },
+        h("button", {
+          class: "btn quiet",
+          onclick: () => {
+            cur.phase = "answer";
+            cur.conf = null;
+            cur.ticks.clear();
+            renderStudy("textarea");
+          },
+        }, "Explain it again, more simply"),
+        cur.text.trim() && h("button", {
+          class: "btn quiet",
+          onclick: async () => {
+            try {
+              await navigator.clipboard.writeText(tutorMessage(deck, c, cur.text));
+              toast("Copied. Paste it to your tutor.");
+            } catch (_) {
+              toast("Couldn't copy here. Select your text and copy it yourself.", 5000);
+            }
+          },
+        }, "Copy for your tutor")),
+      refLine(deck, c),
+      gapNote(s, c));
+  }
+
+  function viewCelebrate(s) {
+    const p = prog(s.id);
+    const min = p.settings.minimum;
+    const shownUp = new Set(p.log.map((e) => e.at.slice(0, 10))).size;
+    const anchor = p.settings.anchor;
+    const more = s.queue.length;
+    const burst = Array.from({ length: 18 }, (_, i) => h("i", {
+      style: `--a:${i * 20}deg;--d:${64 + (i % 3) * 26}px;animation-delay:${(i % 4) * 25}ms`,
+    }));
+    mount(h("div", { class: "celebrate" },
+      h("div", { class: "burst", "aria-hidden": "true" }, burst),
+      h("h1", { class: "yes" }, "Yes!"),
+      h("div", { class: "celebrate-body" },
+        h("p", {}, h("strong", {}, answeredOn(p.log, today()) < min
+          ? "That's everything for today."
+          : min === 1 ? "That's today's card." : `That's today's ${min} cards.`), " Today is a full success."),
+        h("p", {}, 'Celebrate now: a fist pump, a "Yes!", anything that feels good. That feeling is what wires in the habit.'),
+        anchor && h("p", { class: "muted" }, `"After I ${anchor}, I will answer ${cardsWord(min)}." Same again next time.`),
+        h("p", { class: "muted small" }, shownUp === 1 ? "That's your first show-up day." : `That's ${shownUp} show-up days.`)),
+      h("div", { class: "row" },
+        h("button", { class: "btn primary", "data-primary": true, onclick: () => (more > 0 ? stopSession(s) : advance()) }, more > 0 ? "Stop here" : "Done"),
+        more > 0 && h("button", { class: "btn", onclick: advance }, `Keep going (${more} more)`))), "[data-primary]");
+  }
+
+  function viewDone(s) {
+    const deck = app.decks.get(s.id);
+    const p = prog(s.id);
+    const day = today();
+    const cards = replay(p.log);
+    const { good, partly, again, guess } = s.stats;
+    const parts = [];
+    if (guess) parts.push(countOf(guess, "guess", "guesses"));
+    if (good) parts.push(`${good} right`);
+    if (partly) parts.push(`${partly} partly`);
+    if (again) parts.push(`${again} missed`);
+    let soonest = null;
+    let count = 0;
+    for (const q of deck.questions) {
+      const c = cards[q.id];
+      if (!c || c.due <= day) continue;
+      if (soonest === null || c.due < soonest) { soonest = c.due; count = 1; } else if (c.due === soonest) count += 1;
+    }
+    const whenNext = soonest === addDays(day, 1) ? "tomorrow" : `on ${soonest ? prettyDay(soonest) : ""}`;
+    const unseen = deck.questions.filter((q) => !cards[q.id]).length;
+    mount(h("div", {},
+      backLink("#/d/" + encodeURIComponent(s.id), deck.title),
+      h("h1", { class: "title" }, s.answered ? "That's everything for today" : "All caught up"),
+      s.answered > 0 && h("p", {}, `${countOf(s.answered, "answer")}: ${parts.join(", ")}.`),
+      (again > 0 || partly > 0) && h("p", { class: "muted" }, "Getting 60% right is normal and healthy. The misses are where the learning is."),
+      soonest && h("p", {}, `Next up: ${countOf(count, "card")} ${whenNext}.`),
+      unseen > 0 && h("p", { class: "muted" }, `${countOf(unseen, "new card")} waiting for another day. A few at a time works better than a lot at once.`),
+      !soonest && !unseen && h("p", { class: "muted" }, "There's nothing else on the schedule."),
+      h("a", { class: "btn primary", "data-primary": true, href: "#/d/" + encodeURIComponent(s.id) }, "Back to the deck")), "[data-primary]");
+  }
+
+  route();
+})();
+</script>
+</body>
+</html>

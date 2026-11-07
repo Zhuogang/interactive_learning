@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install the schema-test dependency
+        run: pip install jsonschema
+      - name: Check the decks
+        run: |
+          python tools/il.py validate
+          python tools/il.py manifest --check
+      - name: Run the tests
+        run: python -m unittest discover -s tests -v
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright and Chromium
+        run: |
+          npm install --no-save playwright@1.65.0
+          npx playwright install --with-deps chromium
+      - name: Drive the app in a real browser
+        run: node tests/e2e.js

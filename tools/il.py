@@ -1,26 +1,33 @@
 #!/usr/bin/env python3
 """il.py: command-line helper for the interactive_learning toolkit.
 
-Standard library only (Python 3.8+). Run from the repo root:
+Standard library only (Python 3.9+). Run from the repo root:
 
     python3 tools/il.py validate [ID ...]      check deck.json files (all if none given)
     python3 tools/il.py manifest [--check]     rebuild projects/manifest.json
     python3 tools/il.py new ID --title T [--kind paper] [--url U] [--source-title S]
     python3 tools/il.py due ID [--json]        today's queue (reviews, then new cards)
     python3 tools/il.py record ID QID GRADE [--conf guess|think|know] [--score 0..1]
+                        [--text TEXT|-]        add a teach-back (feynman cards; - reads stdin)
     python3 tools/il.py status ID              mastery, show-up days, calibration
+    python3 tools/il.py settings ID [--anchor TEXT] [--minimum N] [--new-per-day N]
+    python3 tools/il.py gaps ID [--json]       list open gaps (things that confused you)
+    python3 tools/il.py gaps ID --add TEXT [--q QID]
+    python3 tools/il.py gaps ID --close AT [--card QID]
     python3 tools/il.py import ID FILE         merge a progress export from the app
 
 GRADE is one of: again (missed), partly, good.
 
-The scheduling rules below are mirrored in app/index.html. Change both together
-(and the table in PRINCIPLES.md section 2).
+The scheduling rules below are mirrored in app/index.html (<script id="core">).
+Change both together, plus the table in PRINCIPLES.md section 2. tests/test_parity.py
+fails if the two ever disagree.
 """
 from __future__ import annotations
 
 import argparse
 import datetime as dt
 import json
+import os
 import re
 import sys
 from pathlib import Path
@@ -42,7 +49,22 @@ KINDS = ("paper", "book", "chapter", "article", "course", "lecture", "video",
          "topic", "concept", "other")
 DEFAULT_SETTINGS = {"minimum": 1, "new_per_day": 5, "anchor": ""}
 ID_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+AT_RE = re.compile(r"[12][0-9]{3}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}")
 ENTRY_KEYS = ("at", "q", "grade", "conf", "score", "pretest", "via")
+GAP_KEYS = ("at", "q", "text", "closed", "card")
+
+# Every key a deck may use. Anything else is probably a typo, so validate warns.
+# schema/deck.schema.json lists the same keys (tests/test_il.py checks they match).
+DECK_KEYS = {"$schema", "format", "id", "title", "subtitle", "source", "goal",
+             "audience", "habit", "concepts", "questions"}
+SOURCE_KEYS = {"kind", "title", "authors", "year", "url", "notes"}
+HABIT_KEYS = {"suggested_anchor"}
+CONCEPT_KEYS = {"id", "title", "summary", "analogy", "example", "read", "read_url",
+                "prereqs", "jargon"}
+QUESTION_KEYS = {"id", "concept", "also", "type", "purpose", "prompt", "ref", "explanation",
+                 "options", "answer", "key_points", "audience", "word_limit", "rubric",
+                 "follow_ups"}
+OPTION_KEYS = {"text", "correct", "why"}
 
 
 # --------------------------------------------------------------------------
@@ -149,6 +171,34 @@ def build_queue(deck: dict, log: list, settings: dict, day: str):
     return due, new
 
 
+def queue_items(deck: dict, log: list, settings: dict, day: str) -> list:
+    """Today's queue as flat items: due reviews first, then new cards.
+
+    A new card gets intro=True when it is the first non-pretest card of its
+    concept: that is the moment to show the concept summary (step 2 of the ladder).
+    """
+    due, new = build_queue(deck, log, settings, day)
+    cards = replay(log)
+    introduced = {q["concept"] for q in deck.get("questions", [])
+                  if q["id"] in cards and q.get("purpose") != "pretest"}
+    items = []
+    for q in due:
+        items.append({"q": q["id"], "concept": q["concept"], "kind": "review",
+                      "box": cards[q["id"]]["box"], "type": q["type"], "purpose": q["purpose"],
+                      "prompt": q["prompt"]})
+    for q in new:
+        intro = q.get("purpose") != "pretest" and q["concept"] not in introduced
+        if intro:
+            introduced.add(q["concept"])
+        items.append({"q": q["id"], "concept": q["concept"], "kind": "new", "intro": intro,
+                      "type": q["type"], "purpose": q["purpose"], "prompt": q["prompt"]})
+    return items
+
+
+def answered_on(log: list, day: str) -> int:
+    return sum(1 for e in log if e["at"][:10] == day)
+
+
 def make_entry(q: dict, cards: dict, grade: str, conf: str | None = None,
                score: float | None = None, via: str = "chat", at: str | None = None) -> dict:
     """Build a log entry, applying the 'a correct guess counts as partly' rule."""
@@ -160,11 +210,20 @@ def make_entry(q: dict, cards: dict, grade: str, conf: str | None = None,
              "grade": "partly" if (grade == "good" and conf == "guess") else grade}
     if conf:
         entry["conf"] = conf
-    entry["score"] = round(SCORE[grade] if score is None else max(0.0, min(1.0, float(score))), 2)
+    # The grade is the decision, and calibration reads the score, so they can't disagree.
+    # A score only adds detail to "partly": how much of it you had.
+    refined = grade == "partly" and score is not None and 0 < float(score) < 1
+    entry["score"] = round(float(score) if refined else SCORE[grade], 2)
     if q.get("purpose") == "pretest" and q["id"] not in cards:
         entry["pretest"] = True
     entry["via"] = via
     return entry
+
+
+def make_teachback(q: dict, text: str, entry: dict) -> dict:
+    text = text.strip()
+    return {"at": entry["at"], "q": q["id"], "text": text, "words": len(text.split()),
+            "score": entry["score"]}
 
 
 def mastery(deck: dict, cards: dict) -> dict:
@@ -214,41 +273,107 @@ def load_deck(pid: str) -> dict:
     return load_json(p)
 
 
-def normalize_progress(p: dict | None, pid: str) -> dict:
-    p = dict(p or {})
-    out = {"format": FORMAT, "deck": p.get("deck", pid),
-           "settings": {**DEFAULT_SETTINGS, **(p.get("settings") or {})},
-           "log": [e for e in (p.get("log") or []) if isinstance(e, dict) and "at" in e and "q" in e and "grade" in e],
-           "feynman": p.get("feynman") or {}}
+def valid_at(x) -> bool:
+    """A real date in the one layout both tools write. Scheduling does date math on these."""
+    if not (isinstance(x, str) and AT_RE.fullmatch(x)):
+        return False
+    try:
+        dt.date.fromisoformat(x[:10])
+    except ValueError:
+        return False
+    return True
+
+
+def _is_int(x) -> bool:
+    return isinstance(x, int) and not isinstance(x, bool)
+
+
+def _valid_entry(e) -> bool:
+    return (isinstance(e, dict) and valid_at(e.get("at")) and isinstance(e.get("q"), str)
+            and e.get("grade") in GRADES
+            and ("conf" not in e or e["conf"] in CONFIDENCE)
+            and ("score" not in e or _is_int(e["score"]) or isinstance(e["score"], float)))
+
+
+def _clean_settings(x) -> dict:
+    out = dict(DEFAULT_SETTINGS)
+    if isinstance(x, dict):
+        for k, v in x.items():
+            if ((k == "anchor" and not isinstance(v, str))
+                    or (k == "minimum" and not (_is_int(v) and v >= 1))
+                    or (k == "new_per_day" and not (_is_int(v) and v >= 0))):
+                continue
+            out[k] = v
     return out
+
+
+def _clean_feynman(x) -> dict:
+    if not isinstance(x, dict):
+        return {}
+    return {c: [e for e in entries if isinstance(e, dict) and valid_at(e.get("at")) and isinstance(e.get("text"), str)]
+            for c, entries in x.items() if isinstance(entries, list)}
+
+
+def normalize_progress(p, pid: str) -> dict:
+    """Everything read from a file passes through here, so a bad row can't break scheduling."""
+    p = p if isinstance(p, dict) else {}
+    log = p.get("log") if isinstance(p.get("log"), list) else []
+    gaps = p.get("gaps") if isinstance(p.get("gaps"), list) else []
+    return {"format": FORMAT, "deck": p.get("deck", pid),
+            "settings": _clean_settings(p.get("settings")),
+            "settings_at": p["settings_at"] if valid_at(p.get("settings_at")) else "",
+            "log": [e for e in log if _valid_entry(e)],
+            "feynman": _clean_feynman(p.get("feynman")),
+            "gaps": [g for g in gaps if isinstance(g, dict) and valid_at(g.get("at")) and isinstance(g.get("text"), str)]}
 
 
 def load_progress(pid: str) -> dict:
     p = progress_path(pid)
-    return normalize_progress(load_json(p) if p.exists() else None, pid)
+    if not p.exists():
+        return normalize_progress(None, pid)
+    try:
+        return normalize_progress(load_json(p), pid)
+    except json.JSONDecodeError as ex:
+        # Say so and stop: carrying on would overwrite the learner's history.
+        sys.exit(f"error: {p.relative_to(ROOT)} isn't valid JSON ({ex}). Fix it by hand; a git merge conflict is a common cause.")
 
 
 def _flat(obj: dict) -> str:
     return json.dumps(obj, ensure_ascii=False, separators=(", ", ": "))
 
 
-def format_progress(p: dict) -> str:
-    """One log entry per line, so git diffs stay readable (same layout as the app's export)."""
-    lines = ["{", f'  "format": {p["format"]},', f'  "deck": {json.dumps(p["deck"])},',
-             f'  "settings": {_flat(p["settings"])},', '  "log": [']
-    for i, e in enumerate(p["log"]):
-        ordered = {k: e[k] for k in ENTRY_KEYS if k in e}
+def _rows(entries: list, keys: tuple) -> list:
+    """One flat JSON object per line, in a fixed key order."""
+    out = []
+    for i, e in enumerate(entries):
+        ordered = {k: e[k] for k in keys if k in e}
         ordered.update({k: v for k, v in e.items() if k not in ordered})
-        lines.append("    " + _flat(ordered) + ("," if i < len(p["log"]) - 1 else ""))
+        out.append("    " + _flat(ordered) + ("," if i < len(entries) - 1 else ""))
+    return out
+
+
+def format_progress(p: dict) -> str:
+    """One log entry per line, so git diffs stay readable (byte-identical to the app's export)."""
+    lines = ["{", f'  "format": {p["format"]},', f'  "deck": {json.dumps(p["deck"])},',
+             f'  "settings": {_flat(p["settings"])},',
+             f'  "settings_at": {json.dumps(p.get("settings_at", ""))},', '  "log": [']
+    lines += _rows(p["log"], ENTRY_KEYS)
     lines.append("  ],")
     feyn = json.dumps(p["feynman"], ensure_ascii=False, indent=2).replace("\n", "\n  ")
-    lines.append(f'  "feynman": {feyn}')
+    lines.append(f'  "feynman": {feyn},')
+    lines.append('  "gaps": [')
+    lines += _rows(p.get("gaps", []), GAP_KEYS)
+    lines.append("  ]")
     lines.append("}")
     return "\n".join(lines) + "\n"
 
 
 def save_progress(pid: str, p: dict) -> None:
-    progress_path(pid).write_text(format_progress(p), encoding="utf-8")
+    """Write via a temp file: the log is the only copy of your history, so never half-write it."""
+    path = progress_path(pid)
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(format_progress(p), encoding="utf-8")
+    os.replace(tmp, path)
 
 
 def merge_progress(local: dict, incoming: dict) -> dict:
@@ -261,10 +386,22 @@ def merge_progress(local: dict, incoming: dict) -> dict:
         have = {e.get("at") for e in feynman.get(c, [])}
         feynman.setdefault(c, []).extend(e for e in entries if e.get("at") not in have)
         feynman[c].sort(key=lambda e: e.get("at", ""))
-    settings = dict(local["settings"])
-    if not settings.get("anchor") and incoming["settings"].get("anchor"):
-        settings["anchor"] = incoming["settings"]["anchor"]
-    return {**local, "settings": settings, "log": log, "feynman": feynman}
+    # Settings: whichever side changed them most recently wins. A tie keeps the local copy.
+    newer = incoming.get("settings_at", "") > local.get("settings_at", "")
+    winner = incoming if newer else local
+    gap_key = lambda g: (g["at"], g["text"])  # noqa: E731
+    gaps = {gap_key(g): dict(g) for g in local.get("gaps", [])}
+    for g in incoming.get("gaps", []):
+        have = gaps.get(gap_key(g))
+        if have is None:
+            gaps[gap_key(g)] = dict(g)
+        else:  # closed on either side stays closed
+            if g.get("closed"):
+                have["closed"] = True
+            if g.get("card") and not have.get("card"):
+                have["card"] = g["card"]
+    return {**local, "settings": dict(winner["settings"]), "settings_at": winner.get("settings_at", ""),
+            "log": log, "feynman": feynman, "gaps": sorted(gaps.values(), key=lambda g: g["at"])}
 
 
 # --------------------------------------------------------------------------
@@ -275,11 +412,20 @@ def _nonempty_str(x) -> bool:
     return isinstance(x, str) and x.strip() != ""
 
 
+def _list_of_str(x) -> bool:
+    return isinstance(x, list) and all(isinstance(i, str) for i in x)
+
+
+def _unknown(obj: dict, allowed: set, where: str) -> list:
+    return [f"{where}: unknown key '{k}' (typo?)" for k in obj if k not in allowed]
+
+
 def validate_deck(deck, folder: str | None = None):
     """Return (errors, warnings) as lists of strings."""
     E, W = [], []
     if not isinstance(deck, dict):
         return ["deck must be a JSON object"], []
+    W += _unknown(deck, DECK_KEYS, "deck")
     if deck.get("format") != FORMAT:
         E.append(f"format must be {FORMAT}")
     did = deck.get("id")
@@ -297,6 +443,12 @@ def validate_deck(deck, folder: str | None = None):
             E.append(f"source.kind must be one of {', '.join(KINDS)}")
         if not _nonempty_str(src.get("title")):
             E.append("source.title is required")
+        W += _unknown(src, SOURCE_KEYS, "source")
+    if "habit" in deck:
+        if isinstance(deck["habit"], dict):
+            W += _unknown(deck["habit"], HABIT_KEYS, "habit")
+        else:
+            E.append("habit must be an object")
     concepts = deck.get("concepts")
     questions = deck.get("questions")
     if not isinstance(concepts, list):
@@ -319,12 +471,17 @@ def validate_deck(deck, folder: str | None = None):
             E.append(f"{where}.id must be lowercase-kebab-case")
             continue
         where = f"concept '{cid}'"
+        W += _unknown(c, CONCEPT_KEYS, where)
         if cid in cids:
             E.append(f"{where}: duplicate id")
         for f in ("title", "summary"):
             if not _nonempty_str(c.get(f)):
                 E.append(f"{where}: {f} is required")
-        for p in c.get("prereqs", []) or []:
+        prereqs = c.get("prereqs", []) or []
+        if not _list_of_str(prereqs):
+            E.append(f"{where}: prereqs must be a list of concept ids")
+            prereqs = []
+        for p in prereqs:
             if p not in cids:
                 E.append(f"{where}: prereq '{p}' must be a concept listed earlier")
         if "jargon" in c and not (isinstance(c["jargon"], list) and all(_nonempty_str(j) for j in c["jargon"])):
@@ -345,10 +502,11 @@ def validate_deck(deck, folder: str | None = None):
             E.append(f"{where}.id must be lowercase-kebab-case")
             continue
         where = f"question '{qid}'"
+        W += _unknown(q, QUESTION_KEYS, where)
         if qid in qids:
             E.append(f"{where}: duplicate id")
         qids.add(qid)
-        if q.get("concept") not in per_concept:
+        if not (isinstance(q.get("concept"), str) and q["concept"] in per_concept):
             E.append(f"{where}: concept '{q.get('concept')}' does not exist")
         else:
             per_concept[q["concept"]].append(q)
@@ -361,7 +519,11 @@ def validate_deck(deck, folder: str | None = None):
             E.append(f"{where}: prompt is required")
         if not _nonempty_str(q.get("ref")):
             W.append(f"{where}: no 'ref' (where in the source this is grounded)")
-        for a in q.get("also", []) or []:
+        also = q.get("also", []) or []
+        if not _list_of_str(also):
+            E.append(f"{where}: also must be a list of concept ids")
+            also = []
+        for a in also:
             if a not in per_concept:
                 E.append(f"{where}: also '{a}' is not a concept")
         if t == "mcq":
@@ -374,7 +536,9 @@ def validate_deck(deck, folder: str | None = None):
                 for j, o in enumerate(opts):
                     if not (isinstance(o, dict) and _nonempty_str(o.get("text"))):
                         E.append(f"{where}: options[{j}].text is required")
-                    elif not _nonempty_str(o.get("why")):
+                        continue
+                    W += _unknown(o, OPTION_KEYS, f"{where}: options[{j}]")
+                    if not _nonempty_str(o.get("why")):
                         W.append(f"{where}: options[{j}] has no 'why' (feedback for that choice)")
             if purpose == "teach":
                 E.append(f"{where}: purpose 'teach' is only for type 'feynman'")
@@ -395,8 +559,11 @@ def validate_deck(deck, folder: str | None = None):
             if not (isinstance(rub, list) and len(rub) >= 2 and all(_nonempty_str(r) for r in rub)):
                 E.append(f"{where}: feynman needs a rubric of at least 2 items")
             wl = q.get("word_limit")
-            if wl is not None and not (isinstance(wl, int) and wl > 0):
+            if wl is not None and not (isinstance(wl, int) and not isinstance(wl, bool) and wl > 0):
                 E.append(f"{where}: word_limit must be a positive integer")
+            fu = q.get("follow_ups")
+            if fu is not None and not (_list_of_str(fu) and all(_nonempty_str(f) for f in fu)):
+                E.append(f"{where}: follow_ups must be a list of strings")
         if purpose == "compare" and not q.get("also"):
             W.append(f"{where}: compare question should list the other concept(s) in 'also'")
 
@@ -415,6 +582,11 @@ def project_ids() -> list:
 # --------------------------------------------------------------------------
 # Commands
 # --------------------------------------------------------------------------
+
+def _count(deck, key: str) -> int:
+    items = deck.get(key) if isinstance(deck, dict) else None
+    return len(items) if isinstance(items, list) else 0
+
 
 def cmd_validate(args) -> int:
     ids = args.ids or project_ids()
@@ -435,7 +607,7 @@ def cmd_validate(args) -> int:
             bad += 1
             continue
         errors, warnings = validate_deck(deck, pid)
-        n_c, n_q = len(deck.get("concepts") or []), len(deck.get("questions") or [])
+        n_c, n_q = (_count(deck, "concepts"), _count(deck, "questions"))
         mark = "✗" if errors else "✓"
         print(f"{mark} {pid}: {n_c} concepts, {n_q} questions"
               f"{f', {len(errors)} errors' if errors else ''}{f', {len(warnings)} warnings' if warnings else ''}")
@@ -455,12 +627,14 @@ def build_manifest() -> dict:
             d = load_json(deck_path(pid))
         except json.JSONDecodeError:
             continue
-        src = d.get("source") or {}
+        if not isinstance(d, dict):
+            continue
+        src = d.get("source") if isinstance(d.get("source"), dict) else {}
         decks.append({"id": d.get("id", pid), "title": d.get("title", pid),
                       "subtitle": d.get("subtitle", ""), "kind": src.get("kind", "other"),
                       "source": src.get("title", ""), "path": f"{pid}/deck.json",
-                      "concepts": len(d.get("concepts") or []),
-                      "questions": len(d.get("questions") or [])})
+                      "concepts": _count(d, "concepts"),
+                      "questions": _count(d, "questions")})
     return {"format": FORMAT, "decks": decks}
 
 
@@ -488,6 +662,8 @@ def cmd_new(args) -> int:
     dest = PROJECTS / pid
     if dest.exists():
         sys.exit(f"error: projects/{pid} already exists")
+    if not any(p.is_file() for p in TEMPLATES.rglob("*")):
+        sys.exit(f"error: no templates in {TEMPLATES}")
     values = {"id": pid, "title": args.title, "kind": args.kind, "url": args.url or "",
               "source_title": args.source_title or args.title, "date": today()}
     for src in sorted(TEMPLATES.rglob("*")):
@@ -498,7 +674,9 @@ def cmd_new(args) -> int:
         out.parent.mkdir(parents=True, exist_ok=True)
         text = src.read_text(encoding="utf-8")
         for k, v in values.items():
-            text = text.replace("{{" + k + "}}", v)
+            # In JSON files a value lands inside a string, so it needs escaping ("A "quoted" title").
+            filled = json.dumps(v, ensure_ascii=False)[1:-1] if src.suffix == ".json" else v
+            text = text.replace("{{" + k + "}}", filled)
         out.write_text(text, encoding="utf-8")
     print(f"created projects/{pid}/ ({', '.join(str(p.relative_to(dest)) for p in sorted(dest.rglob('*')) if p.is_file())})")
     cmd_manifest(argparse.Namespace(check=False))
@@ -514,29 +692,18 @@ def cmd_due(args) -> int:
     deck = load_deck(args.id)
     prog = load_progress(args.id)
     day = args.today or today()
-    due, new = build_queue(deck, prog["log"], prog["settings"], day)
-    cards = replay(prog["log"])
-    introduced = {q["concept"] for q in deck["questions"]
-                  if q["id"] in cards and q.get("purpose") != "pretest"}
+    items = queue_items(deck, prog["log"], prog["settings"], day)
+    answered = answered_on(prog["log"], day)
     concepts = {c["id"]: c for c in deck["concepts"]}
-    items = []
-    for q in due:
-        items.append({"q": q["id"], "concept": q["concept"], "kind": "review",
-                      "box": cards[q["id"]]["box"], "type": q["type"], "purpose": q["purpose"],
-                      "prompt": q["prompt"]})
-    for q in new:
-        intro = q.get("purpose") != "pretest" and q["concept"] not in introduced
-        if intro:
-            introduced.add(q["concept"])
-        items.append({"q": q["id"], "concept": q["concept"], "kind": "new", "intro": intro,
-                      "type": q["type"], "purpose": q["purpose"], "prompt": q["prompt"]})
     if args.json:
-        print(json.dumps({"day": day, "settings": prog["settings"], "items": items},
-                         ensure_ascii=False, indent=2))
+        print(json.dumps({"day": day, "settings": prog["settings"], "answered_today": answered,
+                          "items": items}, ensure_ascii=False, indent=2))
         return 0
     s = prog["settings"]
     anchor = f" · anchor: after I {s['anchor']}" if s.get("anchor") else ""
-    print(f"{deck['title']}: {day} · minimum {s['minimum']} · {len(due)} due · {len(new)} new{anchor}")
+    n_due = sum(1 for it in items if it["kind"] == "review")
+    print(f"{deck['title']}: {day} · minimum {s['minimum']} · answered today {answered}"
+          f" · {n_due} due · {len(items) - n_due} new{anchor}")
     if not items:
         print("All caught up. Nothing due today.")
     for i, it in enumerate(items, 1):
@@ -552,10 +719,18 @@ def cmd_record(args) -> int:
     qmap = {q["id"]: q for q in deck["questions"]}
     if args.qid not in qmap:
         sys.exit(f"error: no question '{args.qid}' in {args.id}")
+    q = qmap[args.qid]
+    text = None
+    if args.text is not None:
+        if q.get("type") != "feynman":
+            sys.exit(f"error: --text is for teach-it cards, and '{args.qid}' is type '{q.get('type')}'")
+        text = sys.stdin.read() if args.text == "-" else args.text
     prog = load_progress(args.id)
     cards = replay(prog["log"])
-    entry = make_entry(qmap[args.qid], cards, args.grade, args.conf, args.score, args.via, args.at)
+    entry = make_entry(q, cards, args.grade, args.conf, args.score, args.via, args.at)
     prog["log"].append(entry)
+    if text and text.strip():
+        prog["feynman"].setdefault(q["concept"], []).append(make_teachback(q, text, entry))
     save_progress(args.id, prog)
     c = replay(prog["log"])[args.qid]
     note = " (a correct guess counts as partly)" if entry["grade"] != args.grade else ""
@@ -593,19 +768,101 @@ def cmd_status(args) -> int:
         print("  calibration (how often you're right at each confidence): " + " · ".join(parts))
     if prog["feynman"]:
         print(f"  teach-backs saved: {sum(len(v) for v in prog['feynman'].values())}")
+    open_gaps = sum(1 for g in prog["gaps"] if not g.get("closed"))
+    if open_gaps:
+        print(f"  open gaps: {open_gaps} (see: python3 tools/il.py gaps {args.id})")
+    return 0
+
+
+def cmd_settings(args) -> int:
+    load_deck(args.id)
+    prog = load_progress(args.id)
+    s = prog["settings"]
+    changed = False
+    if args.anchor is not None:
+        s["anchor"] = args.anchor.strip()
+        changed = True
+    if args.minimum is not None:
+        if args.minimum < 1:
+            sys.exit("error: --minimum must be at least 1")
+        s["minimum"] = args.minimum
+        changed = True
+    if args.new_per_day is not None:
+        if args.new_per_day < 0:
+            sys.exit("error: --new-per-day can't be negative")
+        s["new_per_day"] = args.new_per_day
+        changed = True
+    if changed:
+        prog["settings_at"] = now()
+        save_progress(args.id, prog)
+    print(f"minimum {s['minimum']} · new per day {s['new_per_day']} · anchor: {s['anchor'] or '(none yet)'}")
+    return 0
+
+
+def cmd_gaps(args) -> int:
+    deck = load_deck(args.id)
+    prog = load_progress(args.id)
+    qids = {q["id"] for q in deck["questions"]}
+    for qid, flag in ((args.q, "--q"), (args.card, "--card")):
+        if qid and qid not in qids:
+            sys.exit(f"error: {flag}: no question '{qid}' in {args.id}")
+    if args.add is not None:
+        if not args.add.strip():
+            sys.exit("error: --add needs some text")
+        at = now()
+        taken = {g["at"] for g in prog["gaps"]}
+        while at in taken:  # timestamps identify gaps, and these have one-second resolution
+            at = (dt.datetime.fromisoformat(at) + dt.timedelta(seconds=1)).isoformat()
+        gap = {"at": at, "text": args.add.strip()}
+        if args.q:
+            gap["q"] = args.q
+        prog["gaps"].append(gap)
+        save_progress(args.id, prog)
+        print(f"noted gap {gap['at']}: {_preview(gap['text'])}")
+        return 0
+    if args.close is not None:
+        hits = [g for g in prog["gaps"] if g["at"] == args.close]
+        if not hits:
+            sys.exit(f"error: no gap at '{args.close}'; list them with: python3 tools/il.py gaps {args.id}")
+        for g in hits:
+            g["closed"] = True
+            if args.card:
+                g["card"] = args.card
+        save_progress(args.id, prog)
+        print(f"closed gap {args.close}{f' → card {args.card}' if args.card else ''}")
+        return 0
+    gaps = [g for g in prog["gaps"] if not g.get("closed")]
+    if args.json:
+        print(json.dumps(gaps, ensure_ascii=False, indent=2))
+        return 0
+    if not gaps:
+        print("No open gaps.")
+    for g in gaps:
+        about = f" [{g['q']}]" if g.get("q") else ""
+        print(f"{g['at']}{about}: {g['text']}")
     return 0
 
 
 def cmd_import(args) -> int:
     load_deck(args.id)
-    incoming = normalize_progress(load_json(Path(args.file)), args.id)
+    try:
+        raw = load_json(Path(args.file))
+    except OSError as ex:
+        sys.exit(f"error: can't read {args.file}: {ex.strerror}")
+    except json.JSONDecodeError as ex:
+        sys.exit(f"error: {args.file} is not valid JSON: {ex}")
+    if not (isinstance(raw, dict) and isinstance(raw.get("log"), list)):
+        sys.exit(f"error: {args.file} doesn't look like a progress export (no 'log' list)")
+    incoming = normalize_progress(raw, args.id)
     if incoming["deck"] != args.id:
         sys.exit(f"error: file is progress for '{incoming['deck']}', not '{args.id}'")
     local = load_progress(args.id)
     merged = merge_progress(local, incoming)
     added = len(merged["log"]) - len(local["log"])
     save_progress(args.id, merged)
-    print(f"merged {added} new answers into projects/{args.id}/progress.json")
+    skipped = len(raw["log"]) - len(incoming["log"])
+    note = f" (skipped {skipped} malformed)" if skipped else ""
+    print(f"merged {added} new answers into projects/{args.id}/progress.json{note}")
     return 0
 
 
@@ -641,8 +898,9 @@ def main(argv=None) -> int:
     p.add_argument("qid")
     p.add_argument("grade", choices=GRADES)
     p.add_argument("--conf", choices=CONFIDENCE)
-    p.add_argument("--score", type=float, help="0..1, e.g. share of key points hit")
+    p.add_argument("--score", type=float, help="with partly: how much you had, e.g. 0.67 for 2 of 3 key points")
     p.add_argument("--via", default="chat")
+    p.add_argument("--text", help="teach-back text for a feynman card; - reads it from stdin")
     p.add_argument("--at", help=argparse.SUPPRESS)
     p.set_defaults(fn=cmd_record)
 
@@ -650,6 +908,22 @@ def main(argv=None) -> int:
     p.add_argument("id")
     p.add_argument("--today", help=argparse.SUPPRESS)
     p.set_defaults(fn=cmd_status)
+
+    p = sub.add_parser("settings", help="show or change the anchor, minimum and new cards per day")
+    p.add_argument("id")
+    p.add_argument("--anchor", metavar="TEXT", help="the routine in 'After I ___, I will answer one card'")
+    p.add_argument("--minimum", type=int, metavar="N")
+    p.add_argument("--new-per-day", type=int, metavar="N")
+    p.set_defaults(fn=cmd_settings)
+
+    p = sub.add_parser("gaps", help="list, add or close gaps (things that confused you)")
+    p.add_argument("id")
+    p.add_argument("--json", action="store_true")
+    p.add_argument("--add", metavar="TEXT", help="note a new gap")
+    p.add_argument("--q", metavar="QID", help="with --add: the card it came up on")
+    p.add_argument("--close", metavar="AT", help="close the gap with this timestamp")
+    p.add_argument("--card", metavar="QID", help="with --close: the card that now covers it")
+    p.set_defaults(fn=cmd_gaps)
 
     p = sub.add_parser("import", help="merge a progress.json exported from the app")
     p.add_argument("id")

@@ -105,7 +105,7 @@
       "read": "PRINCIPLES.md §9 Desirable difficulties",
       "read_url": "https://github.com/zhuogang/interactive_learning/blob/main/PRINCIPLES.md#9-desirable-difficulties",
       "prereqs": ["retrieval", "spacing", "pretesting", "interleaving"],
-      "jargon": ["desirable difficulty", "performance", "learning", "fluency"]
+      "jargon": ["desirable difficulty", "performance", "fluency"]
     },
     {
       "id": "feynman",
